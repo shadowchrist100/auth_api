@@ -6,6 +6,7 @@ import { UserDto } from "#dto/user.dto";
 import crypto from 'node:crypto';
 
 export class UserService {
+<<<<<<< HEAD
     static async register(data) {
         const { email, password, firstName, lastName } = data;
 
@@ -24,15 +25,24 @@ export class UserService {
                 lastName
             },
         });
+=======
+  static async register(data) {
+    const { email, password, name } = data;
+
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      throw new ConflictException("Email déjà utilisé");
+>>>>>>> 6764f0f (correction1)
     }
 
-    static async login(email, password) {
-        const user = await prisma.user.findUnique({ where: { email } });
+    const hashedPassword = await hashPassword(password);
 
-        if (!user || !(await verifyPassword(user.password, password))) {
-            throw new UnauthorizedException("Identifiants invalides");
-        }
+    return prisma.user.create({
+      data: { email, password: hashedPassword, name },
+    });
+  }
 
+<<<<<<< HEAD
         //on génère l'Access Token (JWT)
         const accessToken = await generateAccessToken({
             id: user.id,
@@ -81,8 +91,16 @@ export class UserService {
                 }
             }
         })
+=======
+  static async login(email, password) {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user || !(await verifyPassword(user.password, password))) {
+      throw new UnauthorizedException("Identifiants invalides");
+>>>>>>> 6764f0f (correction1)
     }
 
+<<<<<<< HEAD
     static async saveLoginHistory(userId, data) {
     return prisma.loginHistory.create({
         data: {
@@ -222,5 +240,23 @@ export class UserService {
 }
 =======
     
+=======
+    return user;
+  }
+
+  static async findAll() {
+    return prisma.user.findMany();
+  }
+
+  static async findById(id) {
+    const user = await prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException("Utilisateur non trouvé");
+    }
+
+    return user;
+  }
+>>>>>>> 871047c (correction1)
 }
 >>>>>>> fe0e3ad (Gestion des sessions et LoginHistory)

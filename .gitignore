@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 node_modules
 .env
 prisma/dev.db
@@ -9,8 +10,21 @@ node_modules
 
 /generated/prisma
 =======
+=======
+>>>>>>> 6764f0f (correction1)
 node_modules/
 .env
 dev.db
 .prisma
+<<<<<<< HEAD
 >>>>>>> fe0e3ad (Gestion des sessions et LoginHistory)
+=======
+=======
+node_modules
+.env
+prisma/dev.db
+prisma/dev.db-journal
+generated
+
+>>>>>>> 871047c (correction1)
+>>>>>>> 6764f0f (correction1)

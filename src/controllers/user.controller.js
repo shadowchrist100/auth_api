@@ -11,6 +11,7 @@ export class UserController {
   static async register(req, res) {
     const validatedData = validateData(registerSchema, req.body);
     const user = await UserService.register(validatedData);
+<<<<<<< HEAD
     //const token = await signToken({ userId: user.id });
 
     res.status(201).json({
@@ -104,6 +105,18 @@ export class UserController {
       throw new ForbiddenException("unprocessable access_token ");
     }
 =======
+=======
+    const token = await signToken({ userId: user.id });
+
+    res.status(201).json({
+      success: true,
+      user: UserDto.transform(user),
+      token,
+    });
+  }
+
+<<<<<<< HEAD
+>>>>>>> 6764f0f (correction1)
     static async login(req, res) {
     const validatedData = validateData(loginSchema, req.body);
     const { email, password } = validatedData;
@@ -131,6 +144,7 @@ export class UserController {
     });
 }
 
+<<<<<<< HEAD
 >>>>>>> fe0e3ad (Gestion des sessions et LoginHistory)
 
     let data = await response.json();
@@ -181,6 +195,23 @@ export class UserController {
   static async authenticateGithubUser() {
 
   }
+=======
+=======
+  static async login(req, res) {
+    const validatedData = validateData(loginSchema, req.body);
+    const { email, password } = validatedData;
+
+    const user = await UserService.login(email, password);
+    const token = await signToken({ userId: user.id });
+
+    res.json({
+      success: true,
+      user: UserDto.transform(user),
+      token,
+    });
+  }
+>>>>>>> 871047c (correction1)
+>>>>>>> 6764f0f (correction1)
 
   static async getAll(req, res) {
     const users = await UserService.findAll();
@@ -197,6 +228,7 @@ export class UserController {
       user: UserDto.transform(user),
     });
   }
+<<<<<<< HEAD
   static async forgotPassword(req, res) {
     const { email } = req.body;
     await UserService.forgotPassword(email);
@@ -230,3 +262,6 @@ export class UserController {
     res.json({ success: true, message: "Mot de passe mis à jour" });
   }
 }
+=======
+}
+>>>>>>> 6764f0f (correction1)

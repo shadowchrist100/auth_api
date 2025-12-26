@@ -8,6 +8,7 @@ const router = Router();
 router.post("/register", asyncHandler(UserController.register));
 router.post("/login", asyncHandler(UserController.login));
 
+<<<<<<< HEAD
 router.post("/refresh", asyncHandler(UserController.refresh));
 router.post("/logout", asyncHandler(UserController.logout));
 
@@ -19,4 +20,6 @@ router.post("/reset_password", asyncHandler(UserController.resetPassword));
 router.get("/auth/github", asyncHandler(UserController.githubAuth));
 router.get("/auth/githubCallback", asyncHandler(UserController.githubCallback));
 
+=======
+>>>>>>> 6764f0f (correction1)
 export default router;
