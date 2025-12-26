@@ -12,8 +12,6 @@ import userRouter from "#routes/user.routes";
 import authRouter from "#routes/auth.routes";
 import { config } from "#config/env";
 
-
-
 const app = express();
 const PORT = config.PORT || 3000;
 
@@ -25,7 +23,7 @@ app.use(express.json());
 
 // Routes
 app.get("/", (req, res) => {
-    res.json({ success: true, message: "API Express opérationnelle" });
+  res.json({ success: true, message: "API Express opérationnelle" });
 });
 
 // Utilisation des routes
@@ -39,5 +37,5 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-    logger.info(`Serveur démarré sur <http://localhost>:${PORT}`);
+  logger.info(`Serveur démarré sur <http://localhost>:${PORT}`);
 });
