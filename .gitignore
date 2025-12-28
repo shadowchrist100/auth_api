@@ -1,7 +1,11 @@
+<<<<<<< HEAD
 node_modules
+=======
+# node_modules
 # Keep environment variables out of version control
+>>>>>>> bf26a8b (node module)
 .env
-
 prisma/dev.db
 prisma/dev.db-journal
 generated
+
