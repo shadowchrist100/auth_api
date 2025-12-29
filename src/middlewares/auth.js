@@ -5,6 +5,9 @@
  */
 export function auth(req, res, next) {
 	//mock temporaire:on fixe l'ID de l'utilisateur à 1
-	req.user = { id: 1 };
+	req.user = { id: 1 ,
+    email: "test@example.com",
+    name: "Test User",
+    createdAt: new Date()};
 	next();
 }

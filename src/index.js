@@ -14,7 +14,7 @@ import { notFoundHandler } from "#middlewares/not-found";
 import userRouter from "#routes/user.routes";
 import authRouter from "#routes/auth.routes";
 import { config } from "#config/env";
-
+import profileRouter from "#routes/profile.routes";
 const app = express();
 const PORT = config.PORT || 3000;
 
@@ -43,12 +43,15 @@ app.get("/", (req, res) => {
 // Utilisation des routes
 app.use("/users", userRouter);
 app.use("/", authRouter); // Pour garder /register et /login à la racine
+// Profile routes
+app.use("/profile", profileRouter)
 
 // 404 handler
 app.use(notFoundHandler);
 
 // Global error handler
 app.use(errorHandler);
+;
 
 app.listen(PORT, () => {
   logger.info(`Serveur démarré sur <http://localhost>:${PORT}`);
