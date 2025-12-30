@@ -1,7 +1,8 @@
 import prisma from "#lib/prisma";
+import { generateAccessToken, createRefreshToken } from "#lib/jwt";
 import { hashPassword, verifyPassword } from "#lib/password";
 import { ConflictException, UnauthorizedException, NotFoundException } from "#lib/exceptions";
-
+import { UserDto } from "#dto/user.dto";
 export class UserService {
   static async register(data) {
     const { email, password, firstName, lastName } = data;
@@ -31,7 +32,21 @@ export class UserService {
       throw new UnauthorizedException("Identifiants invalides");
     }
 
-    return user;
+    //on génère l'Access Token (JWT)
+    const accessToken = await generateAccessToken({ 
+      id: user.id, 
+      email: user.email 
+    });
+
+   
+    const refreshToken = await createRefreshToken(user.id);
+
+    
+    return {
+      user: new UserDto(user),
+      accessToken,
+      refreshToken
+    };
   }
 
   static async findAll() {

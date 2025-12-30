@@ -1,6 +1,6 @@
 import { UserService } from "#services/user.service";
 import { UserDto } from "#dto/user.dto";
-import { signToken } from "#lib/jwt";
+//import { signToken } from "#lib/jwt";
 import { validateData } from "#lib/validate";
 import { registerSchema, loginSchema } from "#schemas/user.schema";
 
@@ -8,13 +8,13 @@ export class UserController {
   static async register(req, res) {
     const validatedData = validateData(registerSchema, req.body);
     const user = await UserService.register(validatedData);
-    const token = await signToken({ userId: user.id });
+    //const token = await signToken({ userId: user.id });
 
     res.status(201).json({
       success: true,
       message: "Utilisateur créé avec succès",
       user: UserDto.transform(user),
-      token,
+      //token,
     });
   }
 
@@ -22,13 +22,17 @@ export class UserController {
     const validatedData = validateData(loginSchema, req.body);
     const { email, password } = validatedData;
 
-    const user = await UserService.login(email, password);
-    const token = await signToken({ userId: user.id });
+    const result = await UserService.login(email, password);
+    //const token = await signToken({ userId: user.id });
 
     res.json({
       success: true,
-      user: UserDto.transform(user),
-      token,
+      message: "Connexion réussie",
+      data: {
+        user: UserDto.transform(result.user),
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken
+      }
     });
   }
 
