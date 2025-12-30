@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 node_modules
 .env
 prisma/dev.db
@@ -15,6 +16,8 @@ node_modules
 >>>>>>> 6764f0f (correction1)
 =======
 >>>>>>> 18941e8 (node module)
+=======
+>>>>>>> 6c18f1b (OAuth authentication with github)
 node_modules/
 .env
 dev.db
@@ -25,11 +28,9 @@ dev.db
 =======
 =======
 >>>>>>> 608d9d6 (node module)
-node_modules
 =======
-# node_modules
-# Keep environment variables out of version control
->>>>>>> bf26a8b (node module)
+>>>>>>> 1789581 (OAuth authentication with github)
+node_modules
 .env
 prisma/dev.db
 prisma/dev.db-journal

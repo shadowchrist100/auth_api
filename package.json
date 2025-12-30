@@ -25,22 +25,33 @@
     "@prisma/client": "^7.2.0",
     "argon2": "^0.44.0",
 <<<<<<< HEAD
+<<<<<<< HEAD
     "axios": "^1.13.2",
 =======
     "bcrypt": "^6.0.0",
 >>>>>>> fe0e3ad (Gestion des sessions et LoginHistory)
+=======
+    "bcrypt": "^6.0.0",
+=======
+    "axios": "^1.13.2",
+>>>>>>> 1789581 (OAuth authentication with github)
+>>>>>>> 6c18f1b (OAuth authentication with github)
     "better-sqlite3": "^12.5.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
+<<<<<<< HEAD
 <<<<<<< HEAD
     "express": "^5.2.1",
     "express-session": "^1.18.2",
 =======
     "express": "^5.2.1",  
 >>>>>>> 871047c (correction1)
+=======
+    "express": "^5.2.1",
+>>>>>>> 1789581 (OAuth authentication with github)
     "helmet": "^8.1.0",
-    "jose": "^6.1.3", 
+    "jose": "^6.1.3",
     "pino": "^10.1.0",
     "pino-http": "^11.0.0",
     "pino-pretty": "^13.1.3",
