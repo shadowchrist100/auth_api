@@ -1,10 +1,17 @@
 import prisma from "#lib/prisma";
+<<<<<<< HEAD
 import { generateAccessToken, createRefreshToken, verifyRefreshToken } from "#lib/jwt";
 import { hashPassword, verifyPassword } from "#lib/password";
 import { ConflictException, UnauthorizedException, NotFoundException } from "#lib/exceptions";
 import { UserDto } from "#dto/user.dto";
 import crypto from 'node:crypto';
 
+=======
+import { generateAccessToken, createRefreshToken } from "#lib/jwt";
+import { hashPassword, verifyPassword } from "#lib/password";
+import { ConflictException, UnauthorizedException, NotFoundException } from "#lib/exceptions";
+import { UserDto } from "#dto/user.dto";
+>>>>>>> aa1ec1f (feat: implémentation de la connexion avec double token (Access et Refresh))
 export class UserService {
 <<<<<<< HEAD
     static async register(data) {
@@ -106,6 +113,7 @@ export class UserService {
 >>>>>>> 6764f0f (correction1)
     }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     static async saveLoginHistory(userId, data) {
     return prisma.loginHistory.create({
@@ -248,6 +256,23 @@ export class UserService {
     
 =======
     return user;
+=======
+    //on génère l'Access Token (JWT)
+    const accessToken = await generateAccessToken({ 
+      id: user.id, 
+      email: user.email 
+    });
+
+   
+    const refreshToken = await createRefreshToken(user.id);
+
+    
+    return {
+      user: new UserDto(user),
+      accessToken,
+      refreshToken
+    };
+>>>>>>> 42695c6 (feat: implémentation de la connexion avec double token (Access et Refresh))
   }
 
   static async findAll() {

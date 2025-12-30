@@ -12,6 +12,7 @@ export class UserController {
     const validatedData = validateData(registerSchema, req.body);
     const user = await UserService.register(validatedData);
 <<<<<<< HEAD
+<<<<<<< HEAD
     //const token = await signToken({ userId: user.id });
 
     res.status(201).json({
@@ -107,12 +108,15 @@ export class UserController {
 =======
 =======
     const token = await signToken({ userId: user.id });
+=======
+    //const token = await signToken({ userId: user.id });
+>>>>>>> aa1ec1f (feat: implémentation de la connexion avec double token (Access et Refresh))
 
     res.status(201).json({
       success: true,
       message: "Utilisateur créé avec succès",
       user: UserDto.transform(user),
-      token,
+      //token,
     });
   }
 
@@ -202,13 +206,17 @@ export class UserController {
     const validatedData = validateData(loginSchema, req.body);
     const { email, password } = validatedData;
 
-    const user = await UserService.login(email, password);
-    const token = await signToken({ userId: user.id });
+    const result = await UserService.login(email, password);
+    //const token = await signToken({ userId: user.id });
 
     res.json({
       success: true,
-      user: UserDto.transform(user),
-      token,
+      message: "Connexion réussie",
+      data: {
+        user: UserDto.transform(result.user),
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken
+      }
     });
   }
 >>>>>>> 871047c (correction1)
