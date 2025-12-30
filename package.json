@@ -42,6 +42,7 @@
     "dotenv": "^17.2.3",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     "express": "^5.2.1",
     "express-session": "^1.18.2",
 =======
@@ -50,6 +51,9 @@
 =======
     "express": "^5.2.1",
 >>>>>>> 1789581 (OAuth authentication with github)
+=======
+    "express": "^5.2.1",
+>>>>>>> 11bd4b4 (implémentation de l'inscription et hachage des mots de passe)
     "helmet": "^8.1.0",
     "jose": "^6.1.3",
     "pino": "^10.1.0",

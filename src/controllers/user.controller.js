@@ -110,6 +110,7 @@ export class UserController {
 
     res.status(201).json({
       success: true,
+      message: "Utilisateur créé avec succès",
       user: UserDto.transform(user),
       token,
     });
