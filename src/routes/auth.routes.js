@@ -8,4 +8,8 @@ const router = Router();
 router.post("/register", asyncHandler(UserController.register));
 router.post("/login", asyncHandler(UserController.login));
 
+// authentification via github
+router.get("/auth/github", asyncHandler(UserController.githubAuth));
+router.get("/auth/githubCallback", asyncHandler(UserController.githubCallback));
+
 export default router;
