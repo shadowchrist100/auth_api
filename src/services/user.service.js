@@ -1,5 +1,5 @@
 import prisma from "#lib/prisma";
-import { generateAccessToken, createRefreshToken } from "#lib/jwt";
+import { generateAccessToken, createRefreshToken, verifyRefreshToken } from "#lib/jwt";
 import { hashPassword, verifyPassword } from "#lib/password";
 import { ConflictException, UnauthorizedException, NotFoundException } from "#lib/exceptions";
 import { UserDto } from "#dto/user.dto";
@@ -16,11 +16,11 @@ export class UserService {
 
     //REVIENT PROBLEME ICI
     return prisma.user.create({
-      data: { 
-        email, 
-        password: hashedPassword, 
-        firstName, 
-        lastName 
+      data: {
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName
       },
     });
   }
@@ -33,15 +33,15 @@ export class UserService {
     }
 
     //on génère l'Access Token (JWT)
-    const accessToken = await generateAccessToken({ 
-      id: user.id, 
-      email: user.email 
+    const accessToken = await generateAccessToken({
+      id: user.id,
+      email: user.email
     });
 
-   
+
     const refreshToken = await createRefreshToken(user.id);
 
-    
+
     return {
       user: new UserDto(user),
       accessToken,
@@ -61,5 +61,39 @@ export class UserService {
     }
 
     return user;
+  }
+
+
+  static async refresh(token) {
+    const storedToken = await verifyRefreshToken(token);
+    if (!storedToken) {
+      throw new UnauthorizedException("Refresh Token invalide ou expiré");
+    }
+
+    // Générer un nouvel Access Token
+    const accessToken = await generateAccessToken({
+      id: storedToken.user.id,
+      email: storedToken.user.email
+    });
+
+    return { accessToken };
+  }
+
+  static async logout(refreshToken, accessToken) {
+
+    await prisma.refreshToken.updateMany({
+      where: { token: refreshToken },
+      data: { revokedAt: new Date() }
+    });
+
+
+    if (accessToken) {
+      await prisma.BlacklistedAccessToken.create({
+        data: {
+          token: accessToken,
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000) 
+        }
+      });
+    }
   }
 }

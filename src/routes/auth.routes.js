@@ -8,4 +8,7 @@ const router = Router();
 router.post("/register", asyncHandler(UserController.register));
 router.post("/login", asyncHandler(UserController.login));
 
+router.post("/refresh", asyncHandler(UserController.refresh));
+router.post("/logout", asyncHandler(UserController.logout));
+
 export default router;
