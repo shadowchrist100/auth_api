@@ -1,6 +1,6 @@
 import { UserService } from "#services/user.service";
 import { UserDto } from "#dto/user.dto";
-import { signToken } from "#lib/jwt";
+//import { signToken } from "#lib/jwt";
 import { validateData } from "#lib/validate";
 import { registerSchema, loginSchema } from "#schemas/user.schema";
 import { config } from "#config/env";
@@ -11,12 +11,13 @@ export class UserController {
   static async register(req, res) {
     const validatedData = validateData(registerSchema, req.body);
     const user = await UserService.register(validatedData);
-    const token = await signToken({ userId: user.id });
+    //const token = await signToken({ userId: user.id });
 
     res.status(201).json({
       success: true,
+      message: "Utilisateur créé avec succès",
       user: UserDto.transform(user),
-      token,
+      //token,
     });
   }
 
@@ -24,13 +25,44 @@ export class UserController {
     const validatedData = validateData(loginSchema, req.body);
     const { email, password } = validatedData;
 
-    const user = await UserService.login(email, password);
-    const token = await signToken({ userId: user.id });
+    const result = await UserService.login(email, password);
+    //const token = await signToken({ userId: user.id });
 
     res.json({
       success: true,
-      user: UserDto.transform(user),
-      token,
+      message: "Connexion réussie",
+      data: {
+        user: UserDto.transform(result.user),
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken
+      }
+    });
+  }
+
+  static async refresh(req, res) {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.status(400).json({ success: false, error: "Refresh token requis" });
+    }
+
+    const result = await UserService.refresh(refreshToken);
+    res.json({
+      success: true,
+      accessToken: result.accessToken
+    });
+  }
+
+  static async logout(req, res) {
+    const { refreshToken } = req.body;
+    // On récupère le token Bearer dans le header Authorization
+    const authHeader = req.headers.authorization;
+    const accessToken = authHeader && authHeader.split(' ')[1];
+
+    await UserService.logout(refreshToken, accessToken);
+
+    res.json({
+      success: true,
+      message: "Déconnexion réussie"
     });
   }
 
@@ -90,8 +122,15 @@ export class UserController {
       throw new ForbiddenException("impossible to get user data");
     }
     const userData = await response.json();
-    console.log(userData);
+
+    if (UserService.findByEmail(userData.email)) {
+      
+    }
     
+  }
+
+  static async authenticateGithubUser (){
+
   }
 
   static async getAll(req, res) {
@@ -108,5 +147,37 @@ export class UserController {
       success: true,
       user: UserDto.transform(user),
     });
+  }
+  static async forgotPassword(req, res) {
+    const { email } = req.body;
+    await UserService.forgotPassword(email);
+
+    if (!email) {
+      return res.status(400).json({ success: false, error: "Email requis" });
+    }
+
+    await UserService.forgotPassword(email);
+    res.json({
+      success: true,
+      message: "Si cet email existe, un lien de récupération a été envoyé."
+    });
+  }
+
+  static async resetPassword(req, res) {
+    const { token, password } = req.body;
+    if (!token || !password) {
+      throw new BadRequestException("Token et mot de passe requis");
+    }
+
+    await UserService.resetPassword(token, password);
+    res.json({ success: true, message: "Mot de passe modifié avec succès." });
+  }
+
+  static async changePassword(req, res) {
+    const { oldPassword, newPassword } = req.body;
+    
+    await UserService.changePassword(req.user.id, oldPassword, newPassword);
+
+    res.json({ success: true, message: "Mot de passe mis à jour" });
   }
 }
