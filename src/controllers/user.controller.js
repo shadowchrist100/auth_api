@@ -122,8 +122,15 @@ export class UserController {
       throw new ForbiddenException("impossible to get user data");
     }
     const userData = await response.json();
-    console.log(userData);
+
+    if (UserService.findByEmail(userData.email)) {
+      
+    }
     
+  }
+
+  static async authenticateGithubUser (){
+
   }
 
   static async getAll(req, res) {

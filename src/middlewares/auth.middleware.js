@@ -1,4 +1,4 @@
-import { verifyToken } from "#lib/jwt";
+import { verifyAccessToken } from "#lib/jwt";
 import prisma from "#lib/prisma";
 import { UnauthorizedException } from "#lib/exceptions";
 
@@ -16,7 +16,7 @@ export const auth = async (req, res, next) => {
     if (isBlacklisted) throw new UnauthorizedException("Token révoqué");
 
     //on vérifie la validité du JWT
-    const payload = await verifyToken(token);
+    const payload = await verifyAccessToken(token);
     
 
     req.user = { id: payload.id };

@@ -1,8 +1,9 @@
 import crypto from 'node:crypto'; 
 import { SignJWT, jwtVerify } from "jose";
 import prisma from "#lib/prisma";
+import { config } from '#config/env';
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+const secret = new TextEncoder().encode(config.JWT_SECRET);
 const alg = "HS256";
 
 export async function generateAccessToken(payload) {
@@ -31,7 +32,7 @@ export async function createRefreshToken(userId) {
   return token;
 }
 
-export async function verifyToken(token) {
+export async function verifyAccessToken(token) {
   const { payload } = await jwtVerify(token, secret);
   return payload;
 }
