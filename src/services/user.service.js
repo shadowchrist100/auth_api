@@ -102,12 +102,12 @@ export class UserService {
 
   static async forgotPassword(email) {
     const user = await prisma.user.findUnique({ where: { email: email } });
-    
-    if (!user) return;  
+
+    if (!user) return;
 
     // Générer un token unique
     const token = crypto.randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + 3600000); 
+    const expiresAt = new Date(Date.now() + 3600000);
 
     await prisma.PasswordResetToken.create({
       data: {
@@ -146,5 +146,24 @@ export class UserService {
         where: { token }
       })
     ]);
+  }
+
+  static async changePassword(userId, oldPassword, newPassword) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) throw new NotFoundException("Utilisateur non trouvé");
+
+    const isValid = await verifyPassword(user.password, oldPassword);
+    if (!isValid) {
+      throw new UnauthorizedException("L'ancien mot de passe est incorrect");
+    }
+
+    
+    const hashedPassword = await hashPassword(newPassword);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword }
+    });
   }
 }

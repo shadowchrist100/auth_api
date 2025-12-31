@@ -102,4 +102,12 @@ export class UserController {
     await UserService.resetPassword(token, password);
     res.json({ success: true, message: "Mot de passe modifié avec succès." });
   }
+
+  static async changePassword(req, res) {
+    const { oldPassword, newPassword } = req.body;
+    
+    await UserService.changePassword(req.user.id, oldPassword, newPassword);
+
+    res.json({ success: true, message: "Mot de passe mis à jour" });
+  }
 }
