@@ -78,4 +78,28 @@ export class UserController {
       user: UserDto.transform(user),
     });
   }
+  static async forgotPassword(req, res) {
+    const { email } = req.body;
+    await UserService.forgotPassword(email);
+
+    if (!email) {
+      return res.status(400).json({ success: false, error: "Email requis" });
+    }
+
+    await UserService.forgotPassword(email);
+    res.json({
+      success: true,
+      message: "Si cet email existe, un lien de récupération a été envoyé."
+    });
+  }
+
+  static async resetPassword(req, res) {
+    const { token, password } = req.body;
+    if (!token || !password) {
+      throw new BadRequestException("Token et mot de passe requis");
+    }
+
+    await UserService.resetPassword(token, password);
+    res.json({ success: true, message: "Mot de passe modifié avec succès." });
+  }
 }
