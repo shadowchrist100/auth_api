@@ -2,9 +2,13 @@ import crypto from 'node:crypto';
 import { SignJWT, jwtVerify } from "jose";
 import prisma from "#lib/prisma";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { config } from '#config/env';
 =======
 >>>>>>> aa1ec1f (feat: implémentation de la connexion avec double token (Access et Refresh))
+=======
+import { config } from '#config/env';
+>>>>>>> 0afa030 (login github user)
 
 const secret = new TextEncoder().encode(config.JWT_SECRET);
 const alg = "HS256";
@@ -38,6 +42,7 @@ export async function createRefreshToken(userId) {
 }
 
 export async function verifyAccessToken(token) {
+<<<<<<< HEAD
   const { payload } = await jwtVerify(token, secret);
   return payload;
 }
@@ -88,6 +93,8 @@ export async function createRefreshToken(userId) {
 }
 
 export async function verifyToken(token) {
+=======
+>>>>>>> 0afa030 (login github user)
   const { payload } = await jwtVerify(token, secret);
   return payload;
 <<<<<<< HEAD

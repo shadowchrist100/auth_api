@@ -278,10 +278,14 @@ export class UserController {
       throw new ForbiddenException("impossible to get user data");
     }
     const userData = await response.json();
-    console.log(userData);
+
+    if (UserService.findByEmail(userData.email)) {
+      
+    }
     
   }
 
+<<<<<<< HEAD
   static async refresh(req, res) {
     const { refreshToken } = req.body;
     if (!refreshToken) {
@@ -307,6 +311,10 @@ export class UserController {
       success: true,
       message: "Déconnexion réussie"
     });
+=======
+  static async authenticateGithubUser (){
+
+>>>>>>> 1f6915d (login github user)
   }
 
   static async getAll(req, res) {

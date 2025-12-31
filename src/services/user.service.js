@@ -51,7 +51,6 @@ export class UserService {
 
     const hashedPassword = await hashPassword(password);
 
-    //REVIENT PROBLEME ICI
     return prisma.user.create({
       data: {
         email,
@@ -282,6 +281,22 @@ export class UserService {
 >>>>>>> 42695c6 (feat: implémentation de la connexion avec double token (Access et Refresh))
   }
 
+  static async loginGithubUser(user){
+    const accessToken = await generateAccessToken({
+      id: user.id,
+      email: user.email
+    });
+
+    const refreshToken = await createRefreshToken(user.id);
+
+    return {
+      user: new UserDto(user),
+      accessToken,
+      refreshToken 
+    }
+  }
+  
+
   static async findAll() {
     return prisma.user.findMany();
   }
@@ -303,6 +318,15 @@ export class UserService {
 =======
 =======
 
+  static async findByEmail(email) {
+    const user =  await prisma.user.findUnique( { where: { email } } )
+
+    if (!user) {
+      return null;
+    }
+    
+    return user;
+  }
 
   static async refresh(token) {
     const storedToken = await verifyRefreshToken(token);
