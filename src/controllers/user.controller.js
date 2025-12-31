@@ -354,14 +354,22 @@ export class UserController {
     res.json({ success: true, message: "Mot de passe modifié avec succès." });
   }
 <<<<<<< HEAD
+<<<<<<< HEAD
 
   static async changePassword(req, res) {
     const { oldPassword, newPassword } = req.body;
 
+=======
+
+  static async changePassword(req, res) {
+    const { oldPassword, newPassword } = req.body;
+    
+>>>>>>> b9aac9d (ajout du middleware auth et changement de mot de passe sécurisé)
     await UserService.changePassword(req.user.id, oldPassword, newPassword);
 
     res.json({ success: true, message: "Mot de passe mis à jour" });
   }
+<<<<<<< HEAD
 }
 =======
 }
@@ -372,3 +380,6 @@ export class UserController {
 =======
 }
 >>>>>>> ffef489 (ajout du flux de réinitialisation de mot de passe oublié)
+=======
+}
+>>>>>>> b9aac9d (ajout du middleware auth et changement de mot de passe sécurisé)

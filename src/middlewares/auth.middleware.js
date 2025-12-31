@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { verifyAccessToken } from "#lib/jwt";
+=======
+import { verifyToken } from "#lib/jwt";
+>>>>>>> b9aac9d (ajout du middleware auth et changement de mot de passe sécurisé)
 import prisma from "#lib/prisma";
 import { UnauthorizedException } from "#lib/exceptions";
 
@@ -16,7 +20,11 @@ export const auth = async (req, res, next) => {
     if (isBlacklisted) throw new UnauthorizedException("Token révoqué");
 
     //on vérifie la validité du JWT
+<<<<<<< HEAD
     const payload = await verifyAccessToken(token);
+=======
+    const payload = await verifyToken(token);
+>>>>>>> b9aac9d (ajout du middleware auth et changement de mot de passe sécurisé)
     
 
     req.user = { id: payload.id };
