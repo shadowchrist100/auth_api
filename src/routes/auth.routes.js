@@ -10,6 +10,7 @@ router.post("/login", asyncHandler(UserController.login));
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 router.post("/refresh", asyncHandler(UserController.refresh));
 router.post("/logout", asyncHandler(UserController.logout));
 
@@ -19,9 +20,15 @@ router.post("/reset_password", asyncHandler(UserController.resetPassword));
 
 =======
 >>>>>>> 6c18f1b (OAuth authentication with github)
+=======
+>>>>>>> 72d6a2d (Rafraîchissement de jeton et gestion de la déconnexion)
 // authentification via github
 router.get("/auth/github", asyncHandler(UserController.githubAuth));
 router.get("/auth/githubCallback", asyncHandler(UserController.githubCallback));
+=======
+router.post("/refresh", asyncHandler(UserController.refresh));
+router.post("/logout", asyncHandler(UserController.logout));
+>>>>>>> 3727738 (Rafraîchissement de jeton et gestion de la déconnexion)
 
 <<<<<<< HEAD
 =======

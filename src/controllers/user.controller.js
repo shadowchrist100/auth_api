@@ -282,6 +282,33 @@ export class UserController {
     
   }
 
+  static async refresh(req, res) {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.status(400).json({ success: false, error: "Refresh token requis" });
+    }
+
+    const result = await UserService.refresh(refreshToken);
+    res.json({
+      success: true,
+      accessToken: result.accessToken
+    });
+  }
+
+  static async logout(req, res) {
+    const { refreshToken } = req.body;
+    // On récupère le token Bearer dans le header Authorization
+    const authHeader = req.headers.authorization;
+    const accessToken = authHeader && authHeader.split(' ')[1];
+
+    await UserService.logout(refreshToken, accessToken);
+
+    res.json({
+      success: true,
+      message: "Déconnexion réussie"
+    });
+  }
+
   static async getAll(req, res) {
     const users = await UserService.findAll();
     res.json({
@@ -297,6 +324,7 @@ export class UserController {
       user: UserDto.transform(user),
     });
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
   static async forgotPassword(req, res) {
     const { email } = req.body;
@@ -334,3 +362,6 @@ export class UserController {
 =======
 }
 >>>>>>> 6764f0f (correction1)
+=======
+}
+>>>>>>> 72d6a2d (Rafraîchissement de jeton et gestion de la déconnexion)

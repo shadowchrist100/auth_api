@@ -90,5 +90,25 @@ export async function createRefreshToken(userId) {
 export async function verifyToken(token) {
   const { payload } = await jwtVerify(token, secret);
   return payload;
+<<<<<<< HEAD
 >>>>>>> 6764f0f (correction1)
+=======
+}
+
+export async function verifyRefreshToken(token) {
+  const storedToken = await prisma.refreshToken.findUnique({
+    where: { token },
+    include: { user: true }
+  });
+
+  if (!storedToken) return null;
+
+  // Vérifier s'il est expiré ou révoqué
+  const isExpired = new Date() > storedToken.expiresAt;
+  const isRevoked = storedToken.revokedAt !== null;
+
+  if (isExpired || isRevoked) return null;
+
+  return storedToken;
+>>>>>>> 72d6a2d (Rafraîchissement de jeton et gestion de la déconnexion)
 }
