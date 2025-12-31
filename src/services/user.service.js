@@ -7,6 +7,7 @@ import { ConflictException, UnauthorizedException, NotFoundException } from "#li
 import { UserDto } from "#dto/user.dto";
 import crypto from 'node:crypto';
 
+<<<<<<< HEAD
 =======
 import { generateAccessToken, createRefreshToken } from "#lib/jwt";
 =======
@@ -16,6 +17,8 @@ import { hashPassword, verifyPassword } from "#lib/password";
 import { ConflictException, UnauthorizedException, NotFoundException } from "#lib/exceptions";
 import { UserDto } from "#dto/user.dto";
 >>>>>>> aa1ec1f (feat: implémentation de la connexion avec double token (Access et Refresh))
+=======
+>>>>>>> ffef489 (ajout du flux de réinitialisation de mot de passe oublié)
 export class UserService {
 <<<<<<< HEAD
     static async register(data) {
@@ -328,11 +331,67 @@ export class UserService {
       await prisma.BlacklistedAccessToken.create({
         data: {
           token: accessToken,
-          expiresAt: new Date(Date.now() + 15 * 60 * 1000) 
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000)
         }
       });
     }
   }
+<<<<<<< HEAD
 }
 >>>>>>> 3727738 (Rafraîchissement de jeton et gestion de la déconnexion)
+<<<<<<< HEAD
 >>>>>>> 72d6a2d (Rafraîchissement de jeton et gestion de la déconnexion)
+=======
+=======
+
+
+  static async forgotPassword(email) {
+    const user = await prisma.user.findUnique({ where: { email: email } });
+    
+    if (!user) return;  
+
+    // Générer un token unique
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 3600000); 
+
+    await prisma.PasswordResetToken.create({
+      data: {
+        token,
+        userId: user.id,
+        expiresAt
+      }
+    });
+
+    //Simuler l'envoi d'email
+    console.log(`--- SIMULATION EMAIL ---`);
+    console.log(`À: ${email}`);
+    console.log(`Lien de réinitialisation: http://localhost:3000/reset_password?token=${token}`);
+    console.log(`-------------------------`);
+  }
+
+  static async resetPassword(token, newPassword) {
+    const resetToken = await prisma.passwordResetToken.findUnique({
+      where: { token },
+      include: { user: true }
+    });
+
+    if (!resetToken || resetToken.expiresAt < new Date()) {
+      throw new UnauthorizedException("Token invalide ou expiré");
+    }
+
+
+    const hashedPassword = await hashPassword(newPassword);
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: resetToken.userId },
+        data: { password: hashedPassword }
+      }),
+      prisma.passwordResetToken.delete({
+        where: { token }
+      })
+    ]);
+  }
+}
+>>>>>>> 0fd706f (ajout du flux de réinitialisation de mot de passe oublié)
+>>>>>>> ffef489 (ajout du flux de réinitialisation de mot de passe oublié)

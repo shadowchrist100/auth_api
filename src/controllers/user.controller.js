@@ -326,6 +326,9 @@ export class UserController {
   }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> ffef489 (ajout du flux de réinitialisation de mot de passe oublié)
   static async forgotPassword(req, res) {
     const { email } = req.body;
     await UserService.forgotPassword(email);
@@ -350,6 +353,7 @@ export class UserController {
     await UserService.resetPassword(token, password);
     res.json({ success: true, message: "Mot de passe modifié avec succès." });
   }
+<<<<<<< HEAD
 
   static async changePassword(req, res) {
     const { oldPassword, newPassword } = req.body;
@@ -365,3 +369,6 @@ export class UserController {
 =======
 }
 >>>>>>> 72d6a2d (Rafraîchissement de jeton et gestion de la déconnexion)
+=======
+}
+>>>>>>> ffef489 (ajout du flux de réinitialisation de mot de passe oublié)
