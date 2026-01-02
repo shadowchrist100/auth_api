@@ -230,6 +230,7 @@ export class UserController {
     const url = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${githubRedirectURL}&scope=user&state=${state}`;
     res.redirect(url);
   }
+
   static async githubCallback(req, res) {
     const { code, state } = req.query;
     if (state !== config.GITHUB_STATE) {
@@ -278,9 +279,12 @@ export class UserController {
       throw new ForbiddenException("impossible to get user data");
     }
     const userData = await response.json();
+    const user= UserService.findByEmail(userData.email);
 
-    if (UserService.findByEmail(userData.email)) {
-      
+    if (user) {
+      UserService.loginGithubUser(user);
+    }else {
+      UserService.registerGithubUser(userData);
     }
     
   }
