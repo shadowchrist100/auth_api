@@ -37,5 +37,13 @@ prisma/dev.db-journal
 generated
 node_modules
 
+<<<<<<< HEAD
 >>>>>>> 871047c (correction1)
+<<<<<<< HEAD
 >>>>>>> 6764f0f (correction1)
+=======
+=======
+
+/generated/prisma
+>>>>>>> 599f789 (resolving prisma error)
+>>>>>>> 65491ec (resolving prisma error)

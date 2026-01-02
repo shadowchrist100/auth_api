@@ -2,12 +2,14 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "sqlite"
 }
+<<<<<<< HEAD
 
 // Modèle Utilisateur
 model User {
@@ -189,4 +191,9 @@ model LoginHistory {
   createdAt DateTime @default(now())
 >>>>>>> 11bd4b4 (implémentation de l'inscription et hachage des mots de passe)
 }
+<<<<<<< HEAD
 >>>>>>> fe0e3ad (Gestion des sessions et LoginHistory)
+=======
+=======
+>>>>>>> 599f789 (resolving prisma error)
+>>>>>>> 65491ec (resolving prisma error)
