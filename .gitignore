@@ -5,3 +5,5 @@ prisma/dev.db-journal
 generated
 node_modules
 
+
+/generated/prisma
