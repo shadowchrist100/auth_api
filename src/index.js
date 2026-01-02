@@ -2,6 +2,9 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import session from "express-session";
+
 
 dotenv.config();
 
@@ -22,6 +25,17 @@ app.use(helmet());
 app.use(cors());
 app.use(httpLogger);
 app.use(express.json());
+app.use(cookieParser());
+
+app.use(session({
+    secret: config.SESSION_SECRET || "VotreSecretTrèsSécurisé",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 7 // 7 jours
+    }
+}));
+
 
 // Routes
 app.get("/", (req, res) => {

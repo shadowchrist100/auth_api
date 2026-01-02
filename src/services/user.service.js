@@ -28,6 +28,17 @@ export class UserService {
         return user;
     }
 
+    static async saveLoginHistory(userId, data) {
+    return prisma.loginHistory.create({
+        data: {
+            userId,
+            ip: data.ip,
+            userAgent: data.userAgent,
+        },
+    });
+}
+
+
     static async findAll() {
         return prisma.user.findMany();
     }
@@ -41,4 +52,5 @@ export class UserService {
 
         return user;
     }
+    
 }

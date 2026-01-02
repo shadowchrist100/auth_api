@@ -10,13 +10,14 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  posts     Post[]
+  id             Int            @id @default(autoincrement())
+  email          String         @unique
+  password       String
+  name           String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  posts          Post[]
+  loginHistories LoginHistory[]
 }
 
 model Post {
@@ -30,3 +31,12 @@ model Post {
   updatedAt DateTime @updatedAt
 }
 
+model LoginHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  ip        String?
+  userAgent String?
+  loginAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}

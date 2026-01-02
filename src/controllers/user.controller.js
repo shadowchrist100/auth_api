@@ -18,18 +18,32 @@ export class UserController {
     }
 
     static async login(req, res) {
-        const validatedData = validateData(loginSchema, req.body);
-        const { email, password } = validatedData;
+    const validatedData = validateData(loginSchema, req.body);
+    const { email, password } = validatedData;
 
-        const user = await UserService.login(email, password);
-        const token = await signToken({ userId: user.id });
+    // 1 Authentification
+    const user = await UserService.login(email, password);
 
-        res.json({
-            success: true,
-            user: UserDto.transform(user),
-            token,
-        });
-    }
+    // 2 Création de la session
+    req.session.userId = user.id;
+
+    // 3 Sauvegarde de l’historique de connexion
+    await UserService.saveLoginHistory(user.id, {
+        ip: req.ip,
+        userAgent: req.headers["user-agent"],
+    });
+
+    // 4 Génération du token JWT
+    const token = await signToken({ userId: user.id });
+
+    // 5 Réponse au client
+    res.json({
+        success: true,
+        user: UserDto.transform(user),
+        token,
+    });
+}
+
 
     static async getAll(req, res) {
         const users = await UserService.findAll();
