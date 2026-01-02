@@ -68,7 +68,7 @@ export class UserService {
         const lastName = name.split(' ')[0];
         const firstName = name.split(' ')[1];
 
-        prisma.user.create({
+        return prisma.user.create({
             data: {
                 email: email,
                 lastName: lastName,
@@ -131,7 +131,7 @@ export class UserService {
 
 
         if (accessToken) {
-            await prisma.BlacklistedAccessToken.create({
+            await prisma.blacklistedAccessToken.create({
                 data: {
                     token: accessToken,
                     expiresAt: new Date(Date.now() + 15 * 60 * 1000)
@@ -150,7 +150,7 @@ export class UserService {
         const token = crypto.randomBytes(32).toString("hex");
         const expiresAt = new Date(Date.now() + 3600000);
 
-        await prisma.PasswordResetToken.create({
+        await prisma.passwordResetToken.create({
             data: {
                 token,
                 userId: user.id,

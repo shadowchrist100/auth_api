@@ -86,35 +86,35 @@ export class UserController {
     const githubRedirectURL = 'http://localhost:3000/auth/githubCallback';
 
     let response = await fetch('https://github.com/login/oauth/access_token', {
-      method : "POST",
-      headers : {
-        'content-type' : 'application/json',
-        'accept' : 'application/json'
+      method: "POST",
+      headers: {
+        'content-type': 'application/json',
+        'accept': 'application/json'
       },
-      body:JSON.stringify({
-        client_id : githubClientId,
-        client_secret : githubClientSecret,
-        code : code,
-        redirect_uri : githubRedirectURL
+      body: JSON.stringify({
+        client_id: githubClientId,
+        client_secret: githubClientSecret,
+        code: code,
+        redirect_uri: githubRedirectURL
       })
     })
 
     if (!response.ok) {
       throw new ForbiddenException("unprocessable access_token ");
     }
-    
-    let data = await response.json() ;
+
+    let data = await response.json();
     if (data.error) {
       console.error("GitHub Token Error:", data.error_description || data.error);
     }
     const access_token = data.access_token;
 
     response = await fetch('https://api.github.com/user', {
-      method : "GET",
-      headers :{
-        'content-type' : 'application/json',
-        'accept' : 'application/json',
-        'Authorization' : `Bearer ${access_token}`,
+      method: "GET",
+      headers: {
+        'content-type': 'application/json',
+        'accept': 'application/json',
+        'Authorization': `Bearer ${access_token}`,
         'User-Agent': 'NodeJS-App'
       }
     })
@@ -123,17 +123,33 @@ export class UserController {
       throw new ForbiddenException("impossible to get user data");
     }
     const userData = await response.json();
-    const user= UserService.findByEmail(userData.email);
+    let user = UserService.findByEmail(userData.email);
 
     if (user) {
-      UserService.loginGithubUser(user);
-    }else {
-      UserService.registerGithubUser(userData);
+      result = await UserService.loginGithubUser(user);
+
+      return req.json({
+        success: true,
+        message: "Connexion réussie",
+        data: {
+          user: UserDto.transform(result.user),
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken
+        }
+      })
+    } else {
+      const user = UserService.registerGithubUser(userData);
+
+      return res.status(201).json({
+        success: true,
+        message: "Utilisateur créé avec succès",
+        user: UserDto.transform(user),
+      });
     }
-    
+
   }
 
-  static async authenticateGithubUser (){
+  static async authenticateGithubUser() {
 
   }
 
@@ -179,7 +195,7 @@ export class UserController {
 
   static async changePassword(req, res) {
     const { oldPassword, newPassword } = req.body;
-    
+
     await UserService.changePassword(req.user.id, oldPassword, newPassword);
 
     res.json({ success: true, message: "Mot de passe mis à jour" });
