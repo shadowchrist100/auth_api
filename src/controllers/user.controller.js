@@ -260,9 +260,7 @@ export class UserController {
     }
 
     let data = await response.json();
-    if (data.error) {
-      console.error("GitHub Token Error:", data.error_description || data.error);
-    }
+
     const access_token = data.access_token;
 
     response = await fetch('https://api.github.com/user', {
@@ -279,12 +277,13 @@ export class UserController {
       throw new ForbiddenException("impossible to get user data");
     }
     const userData = await response.json();
-    let user = UserService.findByEmail(userData.email);
-
+    let user = await UserService.findByEmail(userData.email);
+    console.log(user);
+    
     if (user) {
-      result = await UserService.loginGithubUser(user);
+      const result = await UserService.loginGithubUser(user);
 
-      return req.json({
+      return res.json({
         success: true,
         message: "Connexion réussie",
         data: {
@@ -294,7 +293,7 @@ export class UserController {
         }
       })
     } else {
-      const user = UserService.registerGithubUser(userData);
+      const user = await UserService.registerGithubUser(userData);
 
       return res.status(201).json({
         success: true,

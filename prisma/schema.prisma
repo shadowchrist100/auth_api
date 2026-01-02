@@ -2,13 +2,13 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 // Modèle Utilisateur
@@ -48,6 +48,11 @@ model User {
 >>>>>>> fe0e3ad (Gestion des sessions et LoginHistory)
 =======
 =======
+=======
+
+// Modèle Utilisateur
+model User {
+>>>>>>> 1de91c7 (login and register github user build)
   id                 String    @id @default(uuid())
   email              String    @unique
   password           String?   // Optionnel pour l'OAuth futur 
@@ -66,8 +71,14 @@ model User {
   resetTokens     PasswordResetToken[]
   verificationTokens VerificationToken[]
   loginHistories  LoginHistory[]
+<<<<<<< HEAD
 >>>>>>> 11bd4b4 (implémentation de l'inscription et hachage des mots de passe)
+<<<<<<< HEAD
 >>>>>>> 8c482bc (implémentation de l'inscription et hachage des mots de passe)
+=======
+=======
+>>>>>>> 1de91c7 (login and register github user build)
+>>>>>>> 77b2302 (login and register github user build)
 }
 
 model OAuthAccount {
@@ -83,6 +94,7 @@ model OAuthAccount {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 model RefreshToken {
   id        String    @id @default(uuid())
   token     String    @unique
@@ -135,6 +147,9 @@ model LoginHistory {
 
 <<<<<<< HEAD
 >>>>>>> 8c482bc (implémentation de l'inscription et hachage des mots de passe)
+=======
+<<<<<<< HEAD
+>>>>>>> 77b2302 (login and register github user build)
 model LoginHistory {
   id        Int      @id @default(autoincrement())
   userId    Int
@@ -144,6 +159,8 @@ model LoginHistory {
 
   user User @relation(fields: [userId], references: [id])
 =======
+=======
+>>>>>>> 1de91c7 (login and register github user build)
 model RefreshToken {
   id        String    @id @default(uuid())
   token     String    @unique
@@ -189,6 +206,7 @@ model LoginHistory {
   userAgent String?
   success   Boolean  // true si réussi
   createdAt DateTime @default(now())
+<<<<<<< HEAD
 >>>>>>> 11bd4b4 (implémentation de l'inscription et hachage des mots de passe)
 }
 <<<<<<< HEAD
@@ -196,4 +214,10 @@ model LoginHistory {
 =======
 =======
 >>>>>>> 599f789 (resolving prisma error)
+<<<<<<< HEAD
 >>>>>>> 65491ec (resolving prisma error)
+=======
+=======
+}
+>>>>>>> 1de91c7 (login and register github user build)
+>>>>>>> 77b2302 (login and register github user build)
