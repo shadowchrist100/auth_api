@@ -11,6 +11,7 @@ datasource db {
 
 // Modèle Utilisateur
 model User {
+<<<<<<< HEAD
   id                 String    @id @default(uuid())
   email              String    @unique
   password           String?   // Optionnel pour l'OAuth futur 
@@ -29,6 +30,16 @@ model User {
   resetTokens     PasswordResetToken[]
   verificationTokens VerificationToken[]
   loginHistories  LoginHistory[]
+=======
+  id             Int            @id @default(autoincrement())
+  email          String         @unique
+  password       String
+  name           String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  posts          Post[]
+  loginHistories LoginHistory[]
+>>>>>>> fe0e3ad (Gestion des sessions et LoginHistory)
 }
 
 model OAuthAccount {
@@ -42,6 +53,7 @@ model OAuthAccount {
   @@unique([provider, providerId]) 
 }
 
+<<<<<<< HEAD
 model RefreshToken {
   id        String    @id @default(uuid())
   token     String    @unique
@@ -88,3 +100,14 @@ model LoginHistory {
   success   Boolean  // true si réussi
   createdAt DateTime @default(now())
 }
+=======
+model LoginHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  ip        String?
+  userAgent String?
+  loginAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+>>>>>>> fe0e3ad (Gestion des sessions et LoginHistory)

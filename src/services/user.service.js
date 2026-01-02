@@ -83,6 +83,17 @@ export class UserService {
         })
     }
 
+    static async saveLoginHistory(userId, data) {
+    return prisma.loginHistory.create({
+        data: {
+            userId,
+            ip: data.ip,
+            userAgent: data.userAgent,
+        },
+    });
+}
+
+
     static async findAll() {
         return prisma.user.findMany();
     }
@@ -96,6 +107,7 @@ export class UserService {
 
         return user;
     }
+<<<<<<< HEAD
 
     static async findByEmail(email) {
         const user = await prisma.user.findUnique({ where: { email } })
@@ -208,3 +220,7 @@ export class UserService {
         });
     }
 }
+=======
+    
+}
+>>>>>>> fe0e3ad (Gestion des sessions et LoginHistory)

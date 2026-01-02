@@ -45,6 +45,7 @@ export class UserController {
       return res.status(400).json({ success: false, error: "Refresh token requis" });
     }
 
+<<<<<<< HEAD
     const result = await UserService.refresh(refreshToken);
     res.json({
       success: true,
@@ -102,6 +103,35 @@ export class UserController {
     if (!response.ok) {
       throw new ForbiddenException("unprocessable access_token ");
     }
+=======
+    static async login(req, res) {
+    const validatedData = validateData(loginSchema, req.body);
+    const { email, password } = validatedData;
+
+    // 1 Authentification
+    const user = await UserService.login(email, password);
+
+    // 2 Création de la session
+    req.session.userId = user.id;
+
+    // 3 Sauvegarde de l’historique de connexion
+    await UserService.saveLoginHistory(user.id, {
+        ip: req.ip,
+        userAgent: req.headers["user-agent"],
+    });
+
+    // 4 Génération du token JWT
+    const token = await signToken({ userId: user.id });
+
+    // 5 Réponse au client
+    res.json({
+        success: true,
+        user: UserDto.transform(user),
+        token,
+    });
+}
+
+>>>>>>> fe0e3ad (Gestion des sessions et LoginHistory)
 
     let data = await response.json();
 

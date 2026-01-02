@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 node_modules
 .env
 prisma/dev.db
@@ -7,3 +8,9 @@ node_modules
 
 
 /generated/prisma
+=======
+node_modules/
+.env
+dev.db
+.prisma
+>>>>>>> fe0e3ad (Gestion des sessions et LoginHistory)
