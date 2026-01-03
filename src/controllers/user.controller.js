@@ -278,10 +278,10 @@ export class UserController {
     }
     const userData = await response.json();
     let user = await UserService.findByEmail(userData.email);
-    console.log(user);
     
     if (user) {
       const result = await UserService.loginGithubUser(user);
+    console.log(user);
 
       return res.json({
         success: true,
