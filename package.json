@@ -24,11 +24,8 @@
     "@prisma/adapter-better-sqlite3": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "argon2": "^0.44.0",
-<<<<<<< HEAD
     "bcrypt": "^6.0.0",
-=======
     "axios": "^1.13.2",
->>>>>>> dev
     "better-sqlite3": "^12.5.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
