@@ -2,7 +2,7 @@ import { Router} from "express";
 import { ProfileController } from "#controllers/profile.controller";
 import {validate} from "#middlewares/validate";
 import { updateProfileSchema } from "#schemas/profile.schema";
-import { auth } from "#middlewares/auth";
+import { auth } from "#middlewares/auth.middleware";
 import { asyncHandler } from "#lib/async-handler";
 
 const router = Router();
