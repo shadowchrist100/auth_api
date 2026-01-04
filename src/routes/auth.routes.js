@@ -8,4 +8,15 @@ const router = Router();
 router.post("/register", asyncHandler(UserController.register));
 router.post("/login", asyncHandler(UserController.login));
 
+router.post("/refresh", asyncHandler(UserController.refresh));
+router.post("/logout", asyncHandler(UserController.logout));
+
+// src/routes/auth.routes.js
+router.post("/forgot_password", asyncHandler(UserController.forgotPassword));
+router.post("/reset_password", asyncHandler(UserController.resetPassword));
+
+// authentification via github
+router.get("/auth/github", asyncHandler(UserController.githubAuth));
+router.get("/auth/githubCallback", asyncHandler(UserController.githubCallback));
+
 export default router;
