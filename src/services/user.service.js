@@ -46,6 +46,44 @@ export class UserService {
             accessToken,
             refreshToken
         };
+<<<<<<< HEAD
+    }
+
+    static async loginGithubUser(user) {
+        const accessToken = await generateAccessToken({
+            id: user.id,
+            email: user.email
+        });
+
+        const refreshToken = await createRefreshToken(user.id);
+
+        return {
+            user: new UserDto(user),
+            accessToken,
+            refreshToken
+        }
+    }
+
+    static async registerGithubUser(userData) {
+        const { email, name, id } = userData;
+        const lastName = name.split(' ')[0];
+        const firstName = name.split(' ')[1];
+
+        return prisma.user.create({
+            data: {
+                email: email,
+                lastName: lastName,
+                firstName: firstName,
+                oauthAccounts: {
+                    create: {
+                        provider: 'GitHub',
+                        providerId: String(id),
+                    }
+                }
+            }
+        })
+=======
+>>>>>>> Bayane
     }
 
     static async loginGithubUser(user) {
@@ -83,6 +121,17 @@ export class UserService {
         })
     }
 
+    static async saveLoginHistory(userId, data) {
+    return prisma.loginHistory.create({
+        data: {
+            userId,
+            ip: data.ip,
+            userAgent: data.userAgent,
+        },
+    });
+}
+
+
     static async findAll() {
         return prisma.user.findMany();
     }
@@ -96,6 +145,13 @@ export class UserService {
 
         return user;
     }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+    
+}
+=======
+>>>>>>> Bayane
 
     static async findByEmail(email) {
         const user = await prisma.user.findUnique({ where: { email } })
@@ -207,4 +263,9 @@ export class UserService {
             data: { password: hashedPassword }
         });
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> dev
+>>>>>>> Bayane

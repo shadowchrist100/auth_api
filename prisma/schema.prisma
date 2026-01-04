@@ -11,6 +11,17 @@ datasource db {
 
 // Modèle Utilisateur
 model User {
+<<<<<<< HEAD
+=======
+  id             Int            @id @default(autoincrement())
+  email          String         @unique
+  password       String
+  name           String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  posts          Post[]
+  loginHistories LoginHistory[]
+>>>>>>> Bayane
   id                 String    @id @default(uuid())
   email              String    @unique
   password           String?   // Optionnel pour l'OAuth futur 
@@ -42,6 +53,18 @@ model OAuthAccount {
   @@unique([provider, providerId]) 
 }
 
+<<<<<<< HEAD
+=======
+model LoginHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  ip        String?
+  userAgent String?
+  loginAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+>>>>>>> Bayane
 model RefreshToken {
   id        String    @id @default(uuid())
   token     String    @unique
@@ -87,4 +110,8 @@ model LoginHistory {
   userAgent String?
   success   Boolean  // true si réussi
   createdAt DateTime @default(now())
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> Bayane
