@@ -8,9 +8,6 @@ const router = Router();
 router.post("/register", asyncHandler(UserController.register));
 router.post("/login", asyncHandler(UserController.login));
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 router.post("/refresh", asyncHandler(UserController.refresh));
 router.post("/logout", asyncHandler(UserController.logout));
 
@@ -18,27 +15,8 @@ router.post("/logout", asyncHandler(UserController.logout));
 router.post("/forgot_password", asyncHandler(UserController.forgotPassword));
 router.post("/reset_password", asyncHandler(UserController.resetPassword));
 
-=======
->>>>>>> 6c18f1b (OAuth authentication with github)
-=======
->>>>>>> 72d6a2d (Rafraîchissement de jeton et gestion de la déconnexion)
 // authentification via github
 router.get("/auth/github", asyncHandler(UserController.githubAuth));
 router.get("/auth/githubCallback", asyncHandler(UserController.githubCallback));
-=======
-router.post("/refresh", asyncHandler(UserController.refresh));
-router.post("/logout", asyncHandler(UserController.logout));
->>>>>>> 3727738 (Rafraîchissement de jeton et gestion de la déconnexion)
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 6764f0f (correction1)
-=======
->>>>>>> 6c18f1b (OAuth authentication with github)
-=======
-// src/routes/auth.routes.js
-router.post("/forgot_password", asyncHandler(UserController.forgotPassword));
-router.post("/reset_password", asyncHandler(UserController.resetPassword));
->>>>>>> ffef489 (ajout du flux de réinitialisation de mot de passe oublié)
 export default router;
