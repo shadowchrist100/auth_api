@@ -1,56 +1,6 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 node_modules
 .env
 prisma/dev.db
 prisma/dev.db-journal
 generated
-node_modules
 
-
-/generated/prisma
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> Bayane
-=======
-=======
-=======
->>>>>>> 6764f0f (correction1)
-=======
->>>>>>> 18941e8 (node module)
-=======
->>>>>>> 6c18f1b (OAuth authentication with github)
-node_modules/
-.env
-dev.db
-.prisma
-<<<<<<< HEAD
->>>>>>> fe0e3ad (Gestion des sessions et LoginHistory)
-=======
-=======
-=======
->>>>>>> 608d9d6 (node module)
-=======
->>>>>>> 1789581 (OAuth authentication with github)
-node_modules
-.env
-prisma/dev.db
-prisma/dev.db-journal
-generated
-node_modules
-
-<<<<<<< HEAD
->>>>>>> 871047c (correction1)
-<<<<<<< HEAD
->>>>>>> 6764f0f (correction1)
-=======
-=======
-
-/generated/prisma
->>>>>>> 599f789 (resolving prisma error)
->>>>>>> 65491ec (resolving prisma error)
->>>>>>> main
