@@ -1,3 +1,4 @@
+import { verifyToken } from "#lib/jwt";
 import { verifyAccessToken } from "#lib/jwt";
 import prisma from "#lib/prisma";
 import { UnauthorizedException } from "#lib/exceptions";
@@ -15,15 +16,8 @@ export const auth = async (req, res, next) => {
     const isBlacklisted = await prisma.blacklistedAccessToken.findUnique({
       where: { token }
     });
-    
-    if (isBlacklisted) {
-      throw new UnauthorizedException("Token révoqué");
-    }
-
-    // On vérifie la validité du JWT (Access Token)
+    if (isBlacklisted) throw new UnauthorizedException("Token révoqué");
     const payload = await verifyAccessToken(token);
-
-    // On attache l'ID de l'utilisateur à la requête pour les routes suivantes
     req.user = { id: payload.id };
     
     next();
