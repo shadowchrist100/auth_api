@@ -10,11 +10,13 @@ import { success } from "zod";
 export class UserController {
   static async emialVerification(req, res) {
     const { code,email } = req.query;
-    res.json({
+    
+    const user =await UserService.verifyEmail(email, code);
+    return res.json({
       success:true,
-      message: "Email verify successfully"
+      message: "Email verify successfully",
+      user : user
     })
-    return await UserService.verifyEmail(code, email);
   }
 
   static async register(req, res) {
