@@ -8,6 +8,9 @@ export const registerSchema = z.object({
     .regex(/[0-9]/, "Doit contenir un chiffre"),
   firstName: z.string().min(2, "Prénom trop court").optional(),
   lastName: z.string().min(2, "Nom trop court").optional(),
+  email: z.email("Email invalide"),
+  password: z.string().min(8, "Minimum 8 caractères"),
+  name: z.string().min(2).optional(),
 });
 
 export const loginSchema = z.object({

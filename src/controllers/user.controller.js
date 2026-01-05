@@ -5,12 +5,21 @@ import { validateData } from "#lib/validate";
 import { registerSchema, loginSchema } from "#schemas/user.schema";
 import { config } from "#config/env";
 import { ForbiddenException, UnauthorizedException } from "#lib/exceptions";
-
+import { success } from "zod";
 
 export class UserController {
+  static async emialVerification(req, res) {
+    const { code,email } = req.query;
+    res.json({
+      success:true,
+      message: "Email verify successfully"
+    })
+    return await UserService.verifyEmail(code, email);
+  }
+
   static async register(req, res) {
     const validatedData = validateData(registerSchema, req.body);
-    const user = await UserService.register(validatedData);
+    const user = await UserService.register(validatedData)
     //const token = await signToken({ userId: user.id });
 
     res.status(201).json({
@@ -122,11 +131,9 @@ export class UserController {
     }
     const userData = await response.json();
     let user = await UserService.findByEmail(userData.email);
-    console.log(user);
-    
+
     if (user) {
       const result = await UserService.loginGithubUser(user);
-
       return res.json({
         success: true,
         message: "Connexion réussie",
@@ -148,10 +155,32 @@ export class UserController {
 
   }
 
-  static async authenticateGithubUser() {
+  static async refresh(req, res) {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.status(400).json({ success: false, error: "Refresh token requis" });
+    }
 
+    const result = await UserService.refresh(refreshToken);
+    res.json({
+      success: true,
+      accessToken: result.accessToken
+    });
   }
 
+  static async logout(req, res) {
+    const { refreshToken } = req.body;
+    // On récupère le token Bearer dans le header Authorization
+    const authHeader = req.headers.authorization;
+    const accessToken = authHeader && authHeader.split(' ')[1];
+
+    await UserService.logout(refreshToken, accessToken);
+
+    res.json({
+      success: true,
+      message: "Déconnexion réussie"
+    });
+  }
   static async getAll(req, res) {
     const users = await UserService.findAll();
     res.json({
@@ -191,6 +220,7 @@ export class UserController {
     await UserService.resetPassword(token, password);
     res.json({ success: true, message: "Mot de passe modifié avec succès." });
   }
+
 
   static async changePassword(req, res) {
     const { oldPassword, newPassword } = req.body;

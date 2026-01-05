@@ -8,6 +8,8 @@ const router = Router();
 router.post("/register", asyncHandler(UserController.register));
 router.post("/login", asyncHandler(UserController.login));
 
+router.get("/auth/emailVerification", asyncHandler(UserController.emialVerification));
+
 router.post("/refresh", asyncHandler(UserController.refresh));
 router.post("/logout", asyncHandler(UserController.logout));
 

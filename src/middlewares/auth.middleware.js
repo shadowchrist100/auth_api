@@ -1,3 +1,4 @@
+import { verifyToken } from "#lib/jwt";
 import { verifyAccessToken } from "#lib/jwt";
 import prisma from "#lib/prisma";
 import { UnauthorizedException } from "#lib/exceptions";
@@ -7,22 +8,21 @@ export const auth = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
 
-    if (!token) throw new UnauthorizedException("Token manquant");
+    if (!token) {
+      throw new UnauthorizedException("Token manquant");
+    }
 
-    //on vérifie si le token est dans la blacklist
+    // On vérifie si le token est dans la blacklist (déconnexion)
     const isBlacklisted = await prisma.blacklistedAccessToken.findUnique({
       where: { token }
     });
     if (isBlacklisted) throw new UnauthorizedException("Token révoqué");
-
-    //on vérifie la validité du JWT
     const payload = await verifyAccessToken(token);
-    
-
     req.user = { id: payload.id };
     
     next();
   } catch (error) {
+    // Si verifyAccessToken expire ou est invalide, on renvoie une erreur 401
     next(new UnauthorizedException("Authentification échouée"));
   }
 };
