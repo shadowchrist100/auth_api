@@ -87,6 +87,56 @@ export class UserService {
         };
     }
 
+    static async registerGithubUser(userData) {
+        const { email, name, id } = userData;
+        const lastName = name.split(' ')[0];
+        const firstName = name.split(' ')[1];
+
+        return prisma.user.create({
+            data: {
+                email: email,
+                lastName: lastName,
+                firstName: firstName,
+                oauthAccounts: {
+                    create: {
+                        provider: 'GitHub',
+                        providerId: String(id),
+                    }
+                }
+            }
+        })
+    }
+    static async login(email, password) {
+        const user = await prisma.user.findUnique({ where: { email } });
+
+        if (!user || !(await verifyPassword(user.password, password))) {
+            throw new UnauthorizedException("Identifiants invalides");
+        }
+        //on génère l'Access Token (JWT)
+        const accessToken = await generateAccessToken({
+            id: user.id,
+            email: user.email
+        });
+
+        const refreshToken = await createRefreshToken(user.id);
+
+        return {
+            user: new UserDto(user),
+            accessToken,
+            refreshToken
+        };
+    }
+    static async saveLoginHistory(userId, data) {
+        return prisma.loginHistory.create({
+            data: {
+                userId,
+                ip: data.ip,
+                userAgent: data.userAgent,
+            },
+        });
+    }
+
+
     // 5. Utilitaires de recherche
     static async findAll() {
         return prisma.user.findMany();
