@@ -8,26 +8,9 @@ generator client {
 datasource db {
   provider = "sqlite"
 }
-<<<<<<< HEAD
-<<<<<<< HEAD
 
 // Modèle Utilisateur
 model User {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-  id             Int            @id @default(autoincrement())
-  email          String         @unique
-  password       String
-  name           String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  posts          Post[]
-  loginHistories LoginHistory[]
->>>>>>> Bayane
-=======
-<<<<<<< HEAD
->>>>>>> main
   id                 String    @id @default(uuid())
   email              String    @unique
   password           String?   // Optionnel pour l'OAuth futur 
@@ -46,52 +29,6 @@ model User {
   resetTokens     PasswordResetToken[]
   verificationTokens VerificationToken[]
   loginHistories  LoginHistory[]
-=======
-=======
->>>>>>> 8c482bc (implémentation de l'inscription et hachage des mots de passe)
-  id             Int            @id @default(autoincrement())
-  email          String         @unique
-  password       String
-  name           String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  posts          Post[]
-  loginHistories LoginHistory[]
-<<<<<<< HEAD
->>>>>>> fe0e3ad (Gestion des sessions et LoginHistory)
-=======
-=======
-=======
-
-// Modèle Utilisateur
-model User {
->>>>>>> 1de91c7 (login and register github user build)
-  id                 String    @id @default(uuid())
-  email              String    @unique
-  password           String?   // Optionnel pour l'OAuth futur 
-  firstName          String?
-  lastName           String?
-  emailVerifiedAt    DateTime? // null = non vérifié 
-  twoFactorSecret    String?
-  twoFactorEnabledAt DateTime?
-  disabledAt         DateTime? // null = actif 
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-
-  // Relations
-  oauthAccounts   OAuthAccount[]
-  refreshTokens   RefreshToken[]
-  resetTokens     PasswordResetToken[]
-  verificationTokens VerificationToken[]
-  loginHistories  LoginHistory[]
-<<<<<<< HEAD
->>>>>>> 11bd4b4 (implémentation de l'inscription et hachage des mots de passe)
-<<<<<<< HEAD
->>>>>>> 8c482bc (implémentation de l'inscription et hachage des mots de passe)
-=======
-=======
->>>>>>> 1de91c7 (login and register github user build)
->>>>>>> 77b2302 (login and register github user build)
 }
 
 model OAuthAccount {
@@ -103,25 +40,8 @@ model OAuthAccount {
   createdAt  DateTime @default(now())
 
   @@unique([provider, providerId]) 
-<<<<<<< HEAD
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-model LoginHistory {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  ip        String?
-  userAgent String?
-  loginAt   DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
-}
->>>>>>> Bayane
-=======
-<<<<<<< HEAD
->>>>>>> main
 model RefreshToken {
   id        String    @id @default(uuid())
   token     String    @unique
@@ -167,92 +87,4 @@ model LoginHistory {
   userAgent String?
   success   Boolean  // true si réussi
   createdAt DateTime @default(now())
-<<<<<<< HEAD
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> Bayane
-=======
-}
-=======
-=======
-}
-
-<<<<<<< HEAD
->>>>>>> 8c482bc (implémentation de l'inscription et hachage des mots de passe)
-=======
-<<<<<<< HEAD
->>>>>>> 77b2302 (login and register github user build)
-model LoginHistory {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  ip        String?
-  userAgent String?
-  loginAt   DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
-=======
-=======
->>>>>>> 1de91c7 (login and register github user build)
-model RefreshToken {
-  id        String    @id @default(uuid())
-  token     String    @unique
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userAgent String?
-  ipAddress String?
-  expiresAt DateTime
-  revokedAt DateTime? // null = actif 
-  createdAt DateTime  @default(now())
-}
-
-model BlacklistedAccessToken {
-  id        String   @id @default(uuid())
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-model VerificationToken {
-  id        String   @id @default(uuid())
-  token     String   @unique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-model PasswordResetToken {
-  id        String   @id @default(uuid())
-  token     String   @unique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-model LoginHistory {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ipAddress String?
-  userAgent String?
-  success   Boolean  // true si réussi
-  createdAt DateTime @default(now())
-<<<<<<< HEAD
->>>>>>> 11bd4b4 (implémentation de l'inscription et hachage des mots de passe)
-}
-<<<<<<< HEAD
->>>>>>> fe0e3ad (Gestion des sessions et LoginHistory)
-=======
-=======
->>>>>>> 599f789 (resolving prisma error)
-<<<<<<< HEAD
->>>>>>> 65491ec (resolving prisma error)
-=======
-=======
-}
->>>>>>> 1de91c7 (login and register github user build)
->>>>>>> 77b2302 (login and register github user build)
->>>>>>> main
