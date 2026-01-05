@@ -3,7 +3,7 @@ import prisma from '../lib/prisma.js';
 
 export const setup2FA = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const userId = req.user.id;
 
     const user = await prisma.user.findUnique({ 
       where: { id: userId } 
@@ -37,35 +37,64 @@ export const setup2FA = async (req, res) => {
     });
   }
 };
+
 export const verifyAndEnable2FA = async (req, res) => {
   try {
-    const { token, tempSecret, userId } = req.body; 
+    const { token } = req.body; 
+    const userId = req.user.id; 
+   
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { twoFactorSecret: true } 
+    });
 
-    if (!token || !tempSecret || !userId) {
-      return res.status(400).json({ message: "Données manquantes (token, secret ou userId)" });
+    if (!user || !user.twoFactorSecret) {
+      return res.status(400).json({ message: "Aucune configuration 2FA trouvée pour cet utilisateur." });
     }
 
-    const isValid = twoFactorService.verifyTwoFactorToken(token, tempSecret);
+   
+    const isValid = twoFactorService.verifyTwoFactorToken(token, user.twoFactorSecret);
 
     if (!isValid) {
-      return res.status(400).json({ message: "Code invalide ou expiré, réessayez." });
+      return res.status(400).json({ message: "Code invalide ou expiré." });
     }
 
-    // Mise à jour de l'utilisateur dans SQLite
+    
+    await prisma.user.update({
+      where: { id: userId },
+      data: { twoFactorEnabledAt: new Date() }
+    });
+
+    return res.status(200).json({ success: true, message: "2FA activée !" });
+
+  } catch (error) {
+    return res.status(500).json({ message: "Erreur lors de la validation." });
+  }
+};
+
+export const disable2FA = async (req, res) => {
+  try {
+     const userId = req.user.id;
+
+    if (!userId) {
+      return res.status(400).json({ message: "ID utilisateur manquant" });
+    }
+
+   
     await prisma.user.update({
       where: { id: userId },
       data: {
-        twoFactorSecret: tempSecret, // On stocke le secret définitif
-        twoFactorEnabledAt: new Date(), // On active officiellement le 2FA
+        twoFactorSecret: null,
+        twoFactorEnabledAt: null,
       },
     });
 
     return res.status(200).json({ 
       success: true, 
-      message: "2FA activée avec succès !" 
+      message: "La double authentification a été désactivée." 
     });
   } catch (error) {
-    console.error("Erreur vérification :", error);
-    return res.status(500).json({ message: "Erreur lors de la validation" });
+    console.error("Erreur désactivation :", error);
+    return res.status(500).json({ message: "Erreur lors de la désactivation" });
   }
 };
