@@ -5,9 +5,18 @@ import { validateData } from "#lib/validate";
 import { registerSchema, loginSchema } from "#schemas/user.schema";
 import { config } from "#config/env";
 import { ForbiddenException, UnauthorizedException } from "#lib/exceptions";
-
+import { success } from "zod";
 
 export class UserController {
+  static async emialVerification(req, res) {
+    const { code,email } = req.query;
+    res.json({
+      success:true,
+      message: "Email verify successfully"
+    })
+    return await UserService.verifyEmail(code, email);
+  }
+
   static async register(req, res) {
     const validatedData = validateData(registerSchema, req.body);
     const user = await UserService.register(validatedData)
@@ -125,8 +134,6 @@ export class UserController {
 
     if (user) {
       const result = await UserService.loginGithubUser(user);
-      console.log(user);
-
       return res.json({
         success: true,
         message: "Connexion réussie",

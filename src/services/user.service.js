@@ -4,8 +4,24 @@ import { hashPassword, verifyPassword } from "#lib/password";
 import { ConflictException, UnauthorizedException, NotFoundException } from "#lib/exceptions";
 import { UserDto } from "#dto/user.dto";
 import crypto from 'node:crypto';
+import { EmailService } from "#services/email.service";
 
 export class UserService {
+    static async verifyEmail(email, code) {
+        const user = this.findByEmail(email)
+
+        if (!user || user.verificationCode != code) {
+            throw new UnauthorizedException("Utilisateur non authentifié ou code invalide")
+        }
+
+        return prisma.user.update({
+            where : { email},
+            data: {
+                emailVerifiedAt: new Date(),
+                verificationCode: null
+            }
+        })
+    }
     // Inscription 
     static async register(data) {
         const { email, password, firstName, lastName } = data;
@@ -17,14 +33,20 @@ export class UserService {
 
         const hashedPassword = await hashPassword(password);
 
-        return prisma.user.create({
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        // envoyer un mail pour vérifer le mail 
+        const url = `http://localhost:3000/auth/emailVerification?code=${global.codeSecret}&email=${email}`;
+        await EmailService.sendEmail(email, "Email Verification", `<a href=${url}>Cliquer sur ce lien pour vérifier votre email</a>`);
+        // on cree l'utilisateur sans  vérifier l'email
+        return await prisma.user.create({
             data: {
                 email,
                 password: hashedPassword,
                 firstName,
-                lastName
+                lastName,
+                verificationCode: verificationCode
             },
-        });
+        })
     }
 
     // Connexion

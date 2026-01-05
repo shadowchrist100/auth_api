@@ -13,7 +13,7 @@ export class EmailService {
             from: 'apiauth@email.com',
             to: email,
             subject: emailSubject != null ? emailSubject : "",
-            text: emailContent
+            html: `<p> ${emailContent}  </p>`
         }
 
         // send email
@@ -21,10 +21,6 @@ export class EmailService {
             if (error) {
                 throw new NotFoundException(error)
             }
-            else{
-
-            }
         })
     }
-
 }
