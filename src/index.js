@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
-
+import twoFactorRoutes from './routes/2fa.routes.js';
 dotenv.config();
 
 import { logger, httpLogger } from "#lib/logger";
@@ -29,12 +29,14 @@ app.get("/", (req, res) => {
 // Utilisation des routes
 app.use("/users", userRouter);
 app.use("/", authRouter); // Pour garder /register et /login à la racine
-
+app.use('/2fa', twoFactorRoutes);
 // 404 handler
 app.use(notFoundHandler);
 
 // Global error handler
 app.use(errorHandler);
+
+
 
 app.listen(PORT, () => {
   logger.info(`Serveur démarré sur <http://localhost>:${PORT}`);
