@@ -68,18 +68,18 @@ export async function verifyToken(token) {
   return payload;
 }
 
-export async function verifyRefreshToken(token) {
-  const storedToken = await prisma.refreshToken.findUnique({
-    where: { token },
-    include: { user: true }
-  });
+// export async function verifyRefreshToken(token) {
+//   const storedToken = await prisma.refreshToken.findUnique({
+//     where: { token },
+//     include: { user: true }
+//   });
 
-  if (!storedToken) return null;
+//   if (!storedToken) return null;
 
-  const isExpired = new Date() > storedToken.expiresAt;
-  const isRevoked = storedToken.revokedAt !== null;
+//   const isExpired = new Date() > storedToken.expiresAt;
+//   const isRevoked = storedToken.revokedAt !== null;
 
-  if (isExpired || isRevoked) return null;
+//   if (isExpired || isRevoked) return null;
 
-  return storedToken;
-}
+//   return storedToken;
+// }
