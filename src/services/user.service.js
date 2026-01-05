@@ -136,7 +136,6 @@ export class UserService {
         });
     }
 
-
     // 5. Utilitaires de recherche
     static async findAll() {
         return prisma.user.findMany();
