@@ -2,14 +2,11 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
-<<<<<<< HEAD
 import twoFactorRoutes from './routes/2fa.routes.js';
-=======
 import cookieParser from "cookie-parser";
 import session from "express-session";
 
 
->>>>>>> 856f1b5a93612ece6e9e1f277b8f7797696103b3
 dotenv.config();
 
 import { logger, httpLogger } from "#lib/logger";
