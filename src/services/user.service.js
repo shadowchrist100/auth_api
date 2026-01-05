@@ -4,8 +4,26 @@ import { hashPassword, verifyPassword } from "#lib/password";
 import { ConflictException, UnauthorizedException, NotFoundException } from "#lib/exceptions";
 import { UserDto } from "#dto/user.dto";
 import crypto from 'node:crypto';
+import { EmailService } from "#services/email.service";
 
 export class UserService {
+    static async verifyEmail(email, code) {
+        const user = await this.findByEmail(email)
+
+        if (!user || user.verificationCode != code) {
+            console.error("code: ", code, "verifCode: ", user.verificationCode);
+            
+            throw new UnauthorizedException("Utilisateur non authentifié ou code invalide")
+        }
+
+        return await prisma.user.update({
+            where : { email},
+            data: {
+                emailVerifiedAt: new Date(),
+                verificationCode: null
+            }
+        })
+    }
     // Inscription 
     static async register(data) {
         const { email, password, firstName, lastName } = data;
@@ -17,14 +35,20 @@ export class UserService {
 
         const hashedPassword = await hashPassword(password);
 
-        return prisma.user.create({
+        const verificationCode = Math.floor(100000 + Math.random() * 900000);
+        // envoyer un mail pour vérifer le mail 
+        const url = `http://localhost:3000/auth/emailVerification?code=${verificationCode}&email=${email}`;
+        await EmailService.sendEmail(email, "Email Verification", `<a href=${url}>Cliquer sur ce lien pour vérifier votre email</a>`);
+        // on cree l'utilisateur sans  vérifier l'email
+        return await prisma.user.create({
             data: {
                 email,
                 password: hashedPassword,
                 firstName,
-                lastName
+                lastName,
+                verificationCode
             },
-        });
+        })
     }
 
     // Connexion
@@ -87,6 +111,55 @@ export class UserService {
         };
     }
 
+    static async registerGithubUser(userData) {
+        const { email, name, id } = userData;
+        const lastName = name.split(' ')[0];
+        const firstName = name.split(' ')[1];
+
+        return prisma.user.create({
+            data: {
+                email: email,
+                lastName: lastName,
+                firstName: firstName,
+                oauthAccounts: {
+                    create: {
+                        provider: 'GitHub',
+                        providerId: String(id),
+                    }
+                }
+            }
+        })
+    }
+    static async login(email, password) {
+        const user = await prisma.user.findUnique({ where: { email } });
+
+        if (!user || !(await verifyPassword(user.password, password))) {
+            throw new UnauthorizedException("Identifiants invalides");
+        }
+        //on génère l'Access Token (JWT)
+        const accessToken = await generateAccessToken({
+            id: user.id,
+            email: user.email
+        });
+
+        const refreshToken = await createRefreshToken(user.id);
+
+        return {
+            user: new UserDto(user),
+            accessToken,
+            refreshToken
+        };
+    }
+    static async saveLoginHistory(userId, data) {
+        return prisma.loginHistory.create({
+            data: {
+                userId,
+                ip: data.ip,
+                userAgent: data.userAgent,
+            },
+        });
+    }
+
     // 5. Utilitaires de recherche
     static async findAll() {
         return prisma.user.findMany();
@@ -99,7 +172,7 @@ export class UserService {
     }
 
     static async findByEmail(email) {
-        return prisma.user.findUnique({ where: { email } });
+        return await prisma.user.findUnique({ where: { email } });
     }
 
     // 6. Gestion des Tokens (Refresh & Logout)
