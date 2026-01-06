@@ -8,13 +8,15 @@ import { EmailService } from "#services/email.service";
 
 export class UserService {
     static async verifyEmail(email, code) {
-        const user = this.findByEmail(email)
+        const user = await this.findByEmail(email)
 
         if (!user || user.verificationCode != code) {
+            console.error("code: ", code, "verifCode: ", user.verificationCode);
+            
             throw new UnauthorizedException("Utilisateur non authentifié ou code invalide")
         }
 
-        return prisma.user.update({
+        return await prisma.user.update({
             where : { email},
             data: {
                 emailVerifiedAt: new Date(),
@@ -33,9 +35,9 @@ export class UserService {
 
         const hashedPassword = await hashPassword(password);
 
-        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const verificationCode = Math.floor(100000 + Math.random() * 900000);
         // envoyer un mail pour vérifer le mail 
-        const url = `http://localhost:3000/auth/emailVerification?code=${global.codeSecret}&email=${email}`;
+        const url = `http://localhost:3000/auth/emailVerification?code=${verificationCode}&email=${email}`;
         await EmailService.sendEmail(email, "Email Verification", `<a href=${url}>Cliquer sur ce lien pour vérifier votre email</a>`);
         // on cree l'utilisateur sans  vérifier l'email
         return await prisma.user.create({
@@ -44,7 +46,7 @@ export class UserService {
                 password: hashedPassword,
                 firstName,
                 lastName,
-                verificationCode: verificationCode
+                verificationCode
             },
         })
     }
@@ -170,7 +172,7 @@ export class UserService {
     }
 
     static async findByEmail(email) {
-        return prisma.user.findUnique({ where: { email } });
+        return await prisma.user.findUnique({ where: { email } });
     }
 
     // 6. Gestion des Tokens (Refresh & Logout)
