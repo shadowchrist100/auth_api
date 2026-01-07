@@ -11,3 +11,4 @@ router.get("/:id", asyncHandler(UserController.getById));
 
 router.post("/change-password", auth, asyncHandler(UserController.changePassword));
 export default router;
+
