@@ -18,11 +18,17 @@ export const auth = async (req, res, next) => {
     });
     if (isBlacklisted) throw new UnauthorizedException("Token révoqué");
     const payload = await verifyAccessToken(token);
-    req.user = { id: payload.id };
     
+// Récupère l'utilisateur
+    const user = await prisma.user.findUnique({ where: { id: payload.id } });
+    if (!user || user.disabledAt) throw new UnauthorizedException("Utilisateur invalide");
+
+    req.user = { id: user.id, email: user.email, name: user.firstName + " " + user.lastName };
     next();
+    //req.user = { id: payload.id };
+    
+    //next();
   } catch (error) {
-    // Si verifyAccessToken expire ou est invalide, on renvoie une erreur 401
-    next(new UnauthorizedException("Authentification échouée"));
+    next(new UnauthorizedException("Token invalide"));
   }
 };
