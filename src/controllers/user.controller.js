@@ -45,7 +45,7 @@ export class UserController {
         user: UserDto.transform(result.user),
         accessToken: result.accessToken,
         refreshToken: result.refreshToken
-      
+      }
     });
   }
 
