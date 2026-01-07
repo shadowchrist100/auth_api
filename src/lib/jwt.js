@@ -7,16 +7,16 @@ const alg = "HS256";
 
 
 export async function generateAccessToken(payload) {
-  return new SignJWT(payload)
+  return new SignJWT({payload, padding: generatePadding()})
     .setProtectedHeader({ alg })
     .setIssuedAt()
     .setExpirationTime("15m")
-    .sign(secret);
+    .sign(accessSecret);
 }
 
 // Crée un Refresh Token en base de données (valide 7 jours)
 export async function createRefreshToken(userId) {
-  const token = crypto.randomBytes(40).toString("hex");
+  const token = crypto.randomBytes(512).toString("hex");
   
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7);
@@ -34,7 +34,7 @@ export async function createRefreshToken(userId) {
 
 // Vérifie la validité d'un Access Token
 export async function verifyAccessToken(token) {
-  const { payload } = await jwtVerify(token, secret);
+  const { payload } = await jwtVerify(token, accessSecret);
   return payload;
 }
 
