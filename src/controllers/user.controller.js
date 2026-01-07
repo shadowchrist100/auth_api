@@ -5,7 +5,8 @@ import { validateData } from "#lib/validate";
 import { registerSchema, loginSchema } from "#schemas/user.schema";
 import { config } from "#config/env";
 import { ForbiddenException, UnauthorizedException } from "#lib/exceptions";
-import { success } from "zod";
+import { generateAccessToken, createRefreshToken } from "#lib/jwt";
+
 
 export class UserController {
   static async emialVerification(req, res) {
@@ -38,6 +39,8 @@ export class UserController {
 
     const result = await UserService.login(email, password);
     //const token = await signToken({ userId: user.id });
+    const accessToken = await generateAccessToken({ id: result.user.id });
+    const refreshToken = await createRefreshToken(result.user.id);
 
     res.json({
       success: true,
