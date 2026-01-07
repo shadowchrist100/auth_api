@@ -17,7 +17,8 @@ model User {
   firstName          String?
   lastName           String?
   emailVerifiedAt    DateTime? // null = non vérifié 
-  verificationCode   Int?
+  emailVerifyToken   String?
+  expiresAt          DateTime?
   twoFactorSecret    String?
   twoFactorEnabledAt DateTime?
   disabledAt         DateTime? // null = actif 

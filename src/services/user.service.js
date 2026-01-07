@@ -10,17 +10,17 @@ export class UserService {
     static async verifyEmail(email, code) {
         const user = await this.findByEmail(email)
 
-        if (!user || user.verificationCode != code) {
-            console.error("code: ", code, "verifCode: ", user.verificationCode);
-            
+        if (!user || user.emailVerifyToken != code) {
+            console.error("code: ", code, "verifCode: ", user.emailVerifyToken);
+
             throw new UnauthorizedException("Utilisateur non authentifié ou code invalide")
         }
 
         return await prisma.user.update({
-            where : { email},
+            where: { email },
             data: {
                 emailVerifiedAt: new Date(),
-                verificationCode: null
+                emailVerifyToken: null
             }
         })
     }
@@ -35,9 +35,11 @@ export class UserService {
 
         const hashedPassword = await hashPassword(password);
 
-        const verificationCode = Math.floor(100000 + Math.random() * 900000);
+        const emailVerifyToken = crypto.randomBytes(64).toString("hex");
+        const expiresAt = new Date(Date.now() + 300000); // 5min
+
         // envoyer un mail pour vérifer le mail 
-        const url = `http://localhost:3000/auth/emailVerification?code=${verificationCode}&email=${email}`;
+        const url = `http://localhost:3000/auth/emailVerification?code=${emailVerifyToken}&email=${email}`;
         await EmailService.sendEmail(email, "Email Verification", `<a href=${url}>Cliquer sur ce lien pour vérifier votre email</a>`);
         // on cree l'utilisateur sans  vérifier l'email
         return await prisma.user.create({
@@ -46,7 +48,8 @@ export class UserService {
                 password: hashedPassword,
                 firstName,
                 lastName,
-                verificationCode
+                emailVerifyToken,
+                expiresAt
             },
         })
     }
@@ -76,7 +79,7 @@ export class UserService {
     // 3. Inscription via GitHub (OAuth)
     static async registerGithubUser(userData) {
         const { email, name, id } = userData;
-        const nameParts = name ? name.split(' ') : ['GitHub', 'User'];
+        const nameParts = name.split(' ');
         const lastName = nameParts[0];
         const firstName = nameParts.slice(1).join(' ') || '';
 
@@ -224,6 +227,8 @@ export class UserService {
             }
         });
 
+        const url = `http://localhost:3000/auth/emailVerification?code=${emailVerifyToken}&email=${email}`;
+        await EmailService.sendEmail(email, "Email Verification", `<a href=${url}>Cliquer sur ce lien pour vérifier votre email</a>`);
         console.log(`--- SIMULATION EMAIL ---`);
         console.log(`Lien: http://localhost:3000/reset_password?token=${token}`);
         console.log(`-------------------------`);
