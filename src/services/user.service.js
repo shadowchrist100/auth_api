@@ -140,7 +140,7 @@ export class UserService {
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) return;
 
-        const token = crypto.randomBytes(32).toString("hex");
+        const token = crypto.randomBytes(512).toString("hex");
         const expiresAt = new Date(Date.now() + 3600000); // 1h
 
         await prisma.passwordResetToken.create({

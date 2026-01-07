@@ -3,21 +3,24 @@ import { SignJWT, jwtVerify } from "jose";
 import prisma from "#lib/prisma";
 import { config } from '#config/env';
 
-const secret = new TextEncoder().encode(config.JWT_SECRET);
+const accessSecret = new TextEncoder().encode(config.ACCESS_TOKEN_SECRET);
+const refreshSecret = new TextEncoder().encode(config.REFRESH_TOKEN_SECRET);
+
 const alg = "HS256";
 
+const generatePadding = () => crypto.randomBytes(400).toString("hex");
 // Génère un token de courte durée (ex: 15m)
 export async function generateAccessToken(payload) {
-  return new SignJWT(payload)
+  return new SignJWT({payload, padding: generatePadding()})
     .setProtectedHeader({ alg })
     .setIssuedAt()
     .setExpirationTime("15m")
-    .sign(secret);
+    .sign(accessSecret);
 }
 
 // Crée un Refresh Token en base de données (valide 7 jours)
 export async function createRefreshToken(userId) {
-  const token = crypto.randomBytes(40).toString("hex");
+  const token = crypto.randomBytes(512).toString("hex");
   
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7);
@@ -35,7 +38,7 @@ export async function createRefreshToken(userId) {
 
 // Vérifie la validité d'un Access Token
 export async function verifyAccessToken(token) {
-  const { payload } = await jwtVerify(token, secret);
+  const { payload } = await jwtVerify(token, accessSecret);
   return payload;
 }
 
