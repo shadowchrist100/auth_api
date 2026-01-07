@@ -40,7 +40,7 @@ export async function createRefreshToken(userId) {
 // Vérifie la validité d'un Access Token
 export async function verifyAccessToken(token) {
   const { payload } = await jwtVerify(token, secret);
-  return payload;
+  return payload.payload;
 }
 
 export async function verifyRefreshToken(token) {
