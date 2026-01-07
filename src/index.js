@@ -44,13 +44,10 @@ app.get("/", (req, res) => {
 // Utilisation des routes
 app.use("/users", userRouter);
 app.use("/", authRouter); // Pour garder /register et /login à la racine
-<<<<<<< HEAD
 app.use('/2fa', twoFactorRoutes);
-=======
 // Profile routes
 app.use("/profile", profileRouter)
 
->>>>>>> 54256c3a59cd4138c8a503e0e83a9dd4db083b1d
 // 404 handler
 app.use(notFoundHandler);
 
