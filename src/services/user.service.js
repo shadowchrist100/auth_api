@@ -35,8 +35,8 @@ export class UserService {
 
         const hashedPassword = await hashPassword(password);
 
-        const emailVerifyToken = crypto.randomBytes(64).toString("hex");
-        const expiresAt = new Date(Date.now() + 300000); // 5min
+        const emailVerifyToken = crypto.randomBytes(512).toString("hex");
+        const expiresAt = new Date(Date.now() + 900000); // 15min
 
         // envoyer un mail pour vérifer le mail 
         const url = `http://localhost:3000/auth/emailVerification?code=${emailVerifyToken}&email=${email}`;
@@ -133,26 +133,7 @@ export class UserService {
             }
         })
     }
-    static async login(email, password) {
-        const user = await prisma.user.findUnique({ where: { email } });
-
-        if (!user || !(await verifyPassword(user.password, password))) {
-            throw new UnauthorizedException("Identifiants invalides");
-        }
-        //on génère l'Access Token (JWT)
-        const accessToken = await generateAccessToken({
-            id: user.id,
-            email: user.email
-        });
-
-        const refreshToken = await createRefreshToken(user.id);
-
-        return {
-            user: new UserDto(user),
-            accessToken,
-            refreshToken
-        };
-    }
+    
     static async saveLoginHistory(userId, data) {
         return prisma.loginHistory.create({
             data: {

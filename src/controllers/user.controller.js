@@ -23,7 +23,6 @@ export class UserController {
   static async register(req, res) {
     const validatedData = validateData(registerSchema, req.body);
     const user = await UserService.register(validatedData)
-    //const token = await signToken({ userId: user.id });
 
     res.status(201).json({
       success: true,
@@ -38,9 +37,6 @@ export class UserController {
     const { email, password } = validatedData;
 
     const result = await UserService.login(email, password);
-    //const token = await signToken({ userId: user.id });
-    const accessToken = await generateAccessToken({ id: result.user.id });
-    const refreshToken = await createRefreshToken(result.user.id);
 
     res.json({
       success: true,
