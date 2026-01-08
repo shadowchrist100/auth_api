@@ -38,6 +38,17 @@ export class UserController {
 
     const result = await UserService.login(email, password);
 
+    if (result.twoFactorRequired) {
+      return res.json({
+        success: true,
+        twoFactorRequired: true,
+        message: "Double authentification requise",
+        data: {
+          userId: result.userId
+        }
+      });
+    }
+
     res.json({
       success: true,
       message: "Connexion réussie",
@@ -48,6 +59,26 @@ export class UserController {
       }
     });
   }
+
+  static async verify2FALogin(req, res) {
+    const { userId, token } = req.body;
+
+    if (!userId || !token) {
+        return res.status(400).json({ message: "ID utilisateur et code requis" });
+    }
+
+    const result = await UserService.verifyLogin2FA(userId, token);
+
+    res.json({
+      success: true,
+      message: "2FA validée, connexion réussie",
+      data: {
+        user: UserDto.transform(result.user),
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken
+      }
+    });
+}
 
   static async refresh(req, res) {
     const { refreshToken } = req.body;
