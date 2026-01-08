@@ -14,6 +14,7 @@ export const generateTwoFactorSetup = async (userEmail) => {
 export const verifyTwoFactorToken = (token, secret) => {
   return authenticator.verify({
     token,  
-    secret   
+    secret,
+    window: 2   
   });
 };

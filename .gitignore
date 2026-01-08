@@ -3,14 +3,5 @@ node_modules
 prisma/dev.db
 prisma/dev.db-journal
 generated
-<<<<<<< HEAD
-
-
-
-
-=======
 dev.db
-prisma/migrations/migration_lock.toml
-prisma/migrations/
 *.db
->>>>>>> 54256c3a59cd4138c8a503e0e83a9dd4db083b1d
