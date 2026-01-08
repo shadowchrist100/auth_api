@@ -6,8 +6,8 @@ import { auth } from "#middlewares/auth.middleware";
 const router = Router();
 
 // Consultation de la liste ou d'un utilisateur
-router.get("/", asyncHandler(UserController.getAll));
-router.get("/:id", asyncHandler(UserController.getById));
+router.get("/",auth, asyncHandler(UserController.getAll));
+router.get("/:id",auth , asyncHandler(UserController.getById));
 
 router.post("/change-password", auth, asyncHandler(UserController.changePassword));
 export default router;
