@@ -1,5 +1,6 @@
-import * as twoFactorService from '../services/twofactor.service.js';
-import prisma from '../lib/prisma.js';
+import { generateTwoFactorSetup } from "#services/twofactor.service";
+import { verifyTwoFactorToken } from "#services/twofactor.service";
+import prisma from "#lib/prisma";
 
 export const setup2FA = async (req, res) => {
   try {
@@ -14,7 +15,7 @@ export const setup2FA = async (req, res) => {
     }
 
     
-    const { secret, qrCodeDataURL } = await twoFactorService.generateTwoFactorSetup(user.email);
+    const { secret, qrCodeDataURL } = await generateTwoFactorSetup(user.email);
 
     
     await prisma.user.update({
@@ -53,7 +54,7 @@ export const verifyAndEnable2FA = async (req, res) => {
     }
 
    
-    const isValid = twoFactorService.verifyTwoFactorToken(token, user.twoFactorSecret);
+    const isValid = verifyTwoFactorToken(token, user.twoFactorSecret);
 
     if (!isValid) {
       return res.status(400).json({ message: "Code invalide ou expiré." });
