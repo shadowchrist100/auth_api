@@ -6,6 +6,8 @@ import { registerSchema, loginSchema } from "#schemas/user.schema";
 import { config } from "#config/env";
 import { ForbiddenException, UnauthorizedException } from "#lib/exceptions";
 import { generateAccessToken, createRefreshToken } from "#lib/jwt";
+import prisma from "#lib/prisma";
+
 
 
 export class UserController {
@@ -48,6 +50,24 @@ export class UserController {
         }
       });
     }
+
+    //Creation de session pour au login 
+  req.session.user = {
+    id: result.user.id,
+    email: result.user.email,
+    username: result.user.username,
+  };
+
+  // Enregistrement de l'historique de connexion
+await prisma.loginHistory.create({
+  data: {
+    userId: result.user.id,
+    ipAddress: req.ip,
+    userAgent: req.headers["user-agent"] ?? "unknown",
+    success: true
+  },
+});
+
 
     res.json({
       success: true,
@@ -238,4 +258,35 @@ export class UserController {
 
     res.json({ success: true, message: "Mot de passe mis à jour" });
   }
-}
+
+    
+  //Controller pour vérifier si la session existe
+  static async checkSession(req, res) {
+    res.json({
+      success: true,
+      message: "Session valide",
+      user: req.session.user,
+    });
+  }
+
+  // Controller pour gérer l'historique des connexions
+  static async getLoginHistory(req, res) {
+    const history = await prisma.loginHistory.findMany({
+      where: {
+        userId: req.session.user.id,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    res.json({
+      success: true,
+      history,
+    });
+  }
+
+  
+} 
+
+

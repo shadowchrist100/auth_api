@@ -4,6 +4,8 @@ import {validate} from "#middlewares/validate";
 import { updateProfileSchema } from "#schemas/profile.schema";
 import { auth } from "#middlewares/auth.middleware";
 import { asyncHandler } from "#lib/async-handler";
+import { requireSession } from "#middlewares/auth.middleware";
+
 
 const router = Router();
 
