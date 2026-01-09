@@ -241,7 +241,8 @@ await prisma.loginHistory.create({
   }
 
   static async resetPassword(req, res) {
-    const { token, password } = req.body;
+    const { password } = req.body;
+    const { token } = req.query
     if (!token || !password) {
       throw new BadRequestException("Token et mot de passe requis");
     }

@@ -1,7 +1,7 @@
 import prisma from "#lib/prisma";
 import { generateAccessToken, createRefreshToken, verifyRefreshToken } from "#lib/jwt";
 import { hashPassword, verifyPassword } from "#lib/password";
-import { ConflictException, UnauthorizedException, NotFoundException } from "#lib/exceptions";
+import { ConflictException, UnauthorizedException, NotFoundException, PrismaException } from "#lib/exceptions";
 import { UserDto } from "#dto/user.dto";
 import crypto from 'node:crypto';
 import { EmailService } from "#services/email.service";
@@ -13,16 +13,18 @@ export class UserService {
         const user = await this.findByEmail(email)
 
         if (!user || user.emailVerifyToken != code) {
-            console.error("code: ", code, "verifCode: ", user.emailVerifyToken);
-
             throw new UnauthorizedException("Utilisateur non authentifié ou code invalide")
+        }
+
+        const isExpired = new Date() > user.expiresAt;
+        if (isExpired) {
+            throw new UnauthorizedException("Code expiré")
         }
 
         return await prisma.user.update({
             where: { email },
             data: {
-                emailVerifiedAt: new Date(),
-                emailVerifyToken: null
+                emailVerifiedAt: new Date()
             }
         })
     }
@@ -126,32 +128,32 @@ static async login(email, password, req) {
 
     //connexion 2fa
     static async verifyLogin2FA(userId, token) {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+        const user = await prisma.user.findUnique({ where: { id: userId } });
 
-    if (!user || !user.twoFactorSecret) {
-        throw new UnauthorizedException("Action non autorisée ou 2FA non configurée");
+        if (!user || !user.twoFactorSecret) {
+            throw new UnauthorizedException("Action non autorisée ou 2FA non configurée");
+        }
+
+        const isValid = verifyTwoFactorToken(token, user.twoFactorSecret);
+
+        if (!isValid) {
+            throw new UnauthorizedException("Code 2FA invalide ou expiré");
+        }
+
+
+        const accessToken = await generateAccessToken({
+            id: user.id,
+            email: user.email
+        });
+
+        const refreshToken = await createRefreshToken(user.id);
+
+        return {
+            user: new UserDto(user),
+            accessToken,
+            refreshToken
+        };
     }
-
-    const isValid = verifyTwoFactorToken(token, user.twoFactorSecret);
-
-    if (!isValid) {
-        throw new UnauthorizedException("Code 2FA invalide ou expiré");
-    }
-
-    
-    const accessToken = await generateAccessToken({
-        id: user.id,
-        email: user.email
-    });
-
-    const refreshToken = await createRefreshToken(user.id);
-
-    return {
-        user: new UserDto(user),
-        accessToken,
-        refreshToken
-    };
-}
 
     // 3. Inscription via GitHub (OAuth)
     static async registerGithubUser(userData) {
@@ -327,7 +329,7 @@ static async login(email, password, req) {
         await EmailService.sendEmail(
             email,
             "Réinitialisation de mot de passe",
-            `Cliquez ici : <a href="${url}">${url}</a>`
+            `<a href="${url}">Cliquer ici pour modifier votre mot de passe</a>`
         );
     }
 
@@ -342,8 +344,8 @@ static async login(email, password, req) {
         }
 
         const hashedPassword = await hashPassword(newPassword);
-
-        await prisma.$transaction([
+        try {
+            await prisma.$transaction([
             prisma.user.update({
                 where: { id: resetToken.userId },
                 data: { password: hashedPassword }
@@ -352,6 +354,11 @@ static async login(email, password, req) {
                 where: { token }
             })
         ]);
+        } catch (error) {
+            throw new PrismaException(error);
+        }
+        
+
     }
 
     // 8. Changement de mot de passe (Profil)
