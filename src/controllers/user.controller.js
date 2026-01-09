@@ -10,13 +10,13 @@ import { generateAccessToken, createRefreshToken } from "#lib/jwt";
 
 export class UserController {
   static async emialVerification(req, res) {
-    const { code,email } = req.query;
-    
-    const user =await UserService.verifyEmail(email, code);
+    const { code, email } = req.query;
+
+    const user = await UserService.verifyEmail(email, code);
     return res.json({
-      success:true,
+      success: true,
       message: "Email verify successfully",
-      user : user
+      user: user
     })
   }
 
@@ -56,9 +56,11 @@ export class UserController {
     }
 
     const result = await UserService.refresh(refreshToken);
+    console.log("Résultat du service:", result);
     res.json({
       success: true,
-      accessToken: result.accessToken
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken
     });
   }
 
@@ -156,32 +158,8 @@ export class UserController {
 
   }
 
-  static async refresh(req, res) {
-    const { refreshToken } = req.body;
-    if (!refreshToken) {
-      return res.status(400).json({ success: false, error: "Refresh token requis" });
-    }
-
-    const result = await UserService.refresh(refreshToken);
-    res.json({
-      success: true,
-      accessToken: result.accessToken
-    });
-  }
-
-  static async logout(req, res) {
-    const { refreshToken } = req.body;
-    // On récupère le token Bearer dans le header Authorization
-    const authHeader = req.headers.authorization;
-    const accessToken = authHeader && authHeader.split(' ')[1];
-
-    await UserService.logout(refreshToken, accessToken);
-
-    res.json({
-      success: true,
-      message: "Déconnexion réussie"
-    });
-  }
+  
+  
   static async getAll(req, res) {
     const users = await UserService.findAll();
     res.json({
@@ -199,7 +177,6 @@ export class UserController {
   }
   static async forgotPassword(req, res) {
     const { email } = req.body;
-    //await UserService.forgotPassword(email);
 
     if (!email) {
       return res.status(400).json({ success: false, error: "Email requis" });

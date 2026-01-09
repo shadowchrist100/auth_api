@@ -3,6 +3,10 @@ node_modules
 prisma/dev.db
 prisma/dev.db-journal
 generated
+
+
+
+
 dev.db
 prisma/migrations/migration_lock.toml
 prisma/migrations/

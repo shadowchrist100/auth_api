@@ -5,6 +5,7 @@ import { ConflictException, UnauthorizedException, NotFoundException } from "#li
 import { UserDto } from "#dto/user.dto";
 import crypto from 'node:crypto';
 import { EmailService } from "#services/email.service";
+import jwt from 'jsonwebtoken'
 
 export class UserService {
     static async verifyEmail(email, code) {
@@ -133,7 +134,7 @@ export class UserService {
             }
         })
     }
-    
+
     static async saveLoginHistory(userId, data) {
         return prisma.loginHistory.create({
             data: {
@@ -166,28 +167,66 @@ export class UserService {
             throw new UnauthorizedException("Refresh Token invalide ou expiré");
         }
 
+        // 1. Générer le nouvel Access Token
         const accessToken = await generateAccessToken({
             id: storedToken.user.id,
             email: storedToken.user.email
         });
 
-        return { accessToken };
+        //on utilise une transaction pour invalider l'ancien et créer le nouveau Refresh Token
+        const newRefreshToken = await prisma.$transaction(async (tx) => {
+
+            await tx.refreshToken.update({
+                where: { token: token },
+                data: { revokedAt: new Date() }
+            });
+
+            // Créer un nouveau Refresh Token
+            const tokenString = crypto.randomBytes(512).toString("hex");
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 7);
+
+            return await tx.refreshToken.create({
+                data: {
+                    token: tokenString,
+                    userId: storedToken.user.id,
+                    expiresAt,
+                },
+            });
+        });
+        return {
+            accessToken,
+            refreshToken: newRefreshToken.token // On récupère la propriété .token de l'objet retourné
+        };
     }
 
     static async logout(refreshToken, accessToken) {
-        // Invalider le refresh token
-        await prisma.refreshToken.updateMany({
-            where: { token: refreshToken },
+        const storedToken = await prisma.refreshToken.findFirst({
+            where: {
+                token: refreshToken,
+                revokedAt: null
+            }
+        });
+        if (!storedToken) {
+            throw new UnauthorizedException("Ce refresh token est invalide ou déjà révoqué");
+        }
+
+        await prisma.refreshToken.update({
+            where: { id: storedToken.id },
             data: { revokedAt: new Date() }
         });
-
-        // Blacklister l'access token
         if (accessToken) {
+            const decoded = jwt.decode(accessToken); // decoder le token pour lire sa vraie date d'expiration
+            const expiryDate = new Date(decoded.exp * 1000);// decoded.exp est en secondes, on le convertit en millisecondes pour l'objet Date
+
+
             await prisma.blacklistedAccessToken.create({
+
                 data: {
                     token: accessToken,
-                    expiresAt: new Date(Date.now() + 15 * 60 * 1000)
+                    expiresAt: expiryDate
                 }
+
             });
         }
     }
@@ -208,11 +247,12 @@ export class UserService {
             }
         });
 
-        const url = `http://localhost:3000/auth/emailVerification?code=${emailVerifyToken}&email=${email}`;
-        await EmailService.sendEmail(email, "Email Verification", `<a href=${url}>Cliquer sur ce lien pour vérifier votre email</a>`);
-        console.log(`--- SIMULATION EMAIL ---`);
-        console.log(`Lien: http://localhost:3000/reset_password?token=${token}`);
-        console.log(`-------------------------`);
+        const url = `http://localhost:3000/reset_password?token=${token}`;
+        await EmailService.sendEmail(
+            email,
+            "Réinitialisation de mot de passe",
+            `Cliquez ici : <a href="${url}">${url}</a>`
+        );
     }
 
     static async resetPassword(token, newPassword) {
