@@ -36,7 +36,7 @@ export class UserController {
     const validatedData = validateData(loginSchema, req.body);
     const { email, password } = validatedData;
 
-    const result = await UserService.login(email, password);
+    const result = await UserService.login(email, password,req);
 
     if (result.twoFactorRequired) {
       return res.json({

@@ -57,34 +57,72 @@ export class UserService {
     }
 
     // Connexion
-    static async login(email, password) {
-        const user = await prisma.user.findUnique({ where: { email } });
+static async login(email, password, req) {
+    const ip = req?.ip || req?.connection?.remoteAddress || null;
+    const userAgent = req?.headers["user-agent"] || "unknown";
 
-        if (!user || !(await verifyPassword(user.password, password))) {
-            throw new UnauthorizedException("Identifiants invalides");
-        }
-        
-        if (user.twoFactorEnabledAt) {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+  
+    if (!user) {
+        await prisma.loginHistory.create({
+            data: {
+                userId: null,
+                ipAddress: ip,
+                userAgent,
+                success: false
+            }
+        });
+        throw new UnauthorizedException("Identifiants invalides");
+    }
+
+   
+    const isPasswordValid = await verifyPassword(user.password, password);
+    if (!isPasswordValid) {
+        await prisma.loginHistory.create({
+            data: {
+                userId: user.id,
+                ipAddress: ip,
+                userAgent,
+                success: false
+            }
+        });
+        throw new UnauthorizedException("Identifiants invalides");
+    }
+
+   
+    if (user.twoFactorEnabledAt) {
         return {
             twoFactorRequired: true,
             userId: user.id,
             message: "Double authentification requise"
-         };
-        }
-
-        const accessToken = await generateAccessToken({
-            id: user.id,
-            email: user.email
-        });
-
-        const refreshToken = await createRefreshToken(user.id);
-
-        return {
-            user: new UserDto(user),
-            accessToken,
-            refreshToken
         };
     }
+
+   
+    await prisma.loginHistory.create({
+        data: {
+            userId: user.id,
+            ipAddress: ip,
+            userAgent,
+            success: true
+        }
+    });
+
+    const accessToken = await generateAccessToken({
+        id: user.id,
+        email: user.email
+    });
+
+    const refreshToken = await createRefreshToken(user.id);
+
+    return {
+        user: new UserDto(user),
+        accessToken,
+        refreshToken
+    };
+}
+
 
     //connexion 2fa
     static async verifyLogin2FA(userId, token) {
