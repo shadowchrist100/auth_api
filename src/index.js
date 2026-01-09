@@ -1,3 +1,4 @@
+import { CronService } from '#services/cron.service';
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -53,9 +54,9 @@ app.use(notFoundHandler);
 
 // Global error handler
 app.use(errorHandler);
-;
 
-
+// Initialisation du service cron
+CronService.init();
 
 app.listen(PORT, () => {
   logger.info(`Serveur démarré sur <http://localhost>:${PORT}`);

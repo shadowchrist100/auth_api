@@ -32,3 +32,15 @@ export const auth = async (req, res, next) => {
     next(new UnauthorizedException("Token invalide"));
   }
 };
+
+// Middleware pour protection par SESSION
+export const requireSession = (req, res, next) => {
+  if (!req.session || !req.session.user) {
+    return res.status(401).json({
+      success: false,
+      message: "Accès refusé : utilisateur non connecté"
+    });
+  }
+
+  next(); // utilisateur connecté → on continue
+};

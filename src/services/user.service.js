@@ -1,10 +1,11 @@
 import prisma from "#lib/prisma";
 import { generateAccessToken, createRefreshToken, verifyRefreshToken } from "#lib/jwt";
 import { hashPassword, verifyPassword } from "#lib/password";
-import { ConflictException, UnauthorizedException, NotFoundException } from "#lib/exceptions";
+import { ConflictException, UnauthorizedException, NotFoundException, PrismaException } from "#lib/exceptions";
 import { UserDto } from "#dto/user.dto";
 import crypto from 'node:crypto';
 import { EmailService } from "#services/email.service";
+import jwt from 'jsonwebtoken'
 import { verifyTwoFactorToken } from "#services/twofactor.service";
 
 export class UserService {
@@ -12,16 +13,18 @@ export class UserService {
         const user = await this.findByEmail(email)
 
         if (!user || user.emailVerifyToken != code) {
-            console.error("code: ", code, "verifCode: ", user.emailVerifyToken);
-
             throw new UnauthorizedException("Utilisateur non authentifié ou code invalide")
+        }
+
+        const isExpired = new Date() > user.expiresAt;
+        if (isExpired) {
+            throw new UnauthorizedException("Code expiré")
         }
 
         return await prisma.user.update({
             where: { email },
             data: {
-                emailVerifiedAt: new Date(),
-                emailVerifyToken: null
+                emailVerifiedAt: new Date()
             }
         })
     }
@@ -56,20 +59,87 @@ export class UserService {
     }
 
     // Connexion
-    static async login(email, password) {
-        const user = await prisma.user.findUnique({ where: { email } });
+static async login(email, password, req) {
+    const ip = req?.ip || req?.connection?.remoteAddress || null;
+    const userAgent = req?.headers["user-agent"] || "unknown";
 
-        if (!user || !(await verifyPassword(user.password, password))) {
-            throw new UnauthorizedException("Identifiants invalides");
-        }
-        
-        if (user.twoFactorEnabledAt) {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+  
+    if (!user) {
+        await prisma.loginHistory.create({
+            data: {
+                userId: null,
+                ipAddress: ip,
+                userAgent,
+                success: false
+            }
+        });
+        throw new UnauthorizedException("Identifiants invalides");
+    }
+
+   
+    const isPasswordValid = await verifyPassword(user.password, password);
+    if (!isPasswordValid) {
+        await prisma.loginHistory.create({
+            data: {
+                userId: user.id,
+                ipAddress: ip,
+                userAgent,
+                success: false
+            }
+        });
+        throw new UnauthorizedException("Identifiants invalides");
+    }
+
+   
+    if (user.twoFactorEnabledAt) {
         return {
             twoFactorRequired: true,
             userId: user.id,
             message: "Double authentification requise"
-         };
+        };
+    }
+
+   
+    await prisma.loginHistory.create({
+        data: {
+            userId: user.id,
+            ipAddress: ip,
+            userAgent,
+            success: true
         }
+    });
+
+    const accessToken = await generateAccessToken({
+        id: user.id,
+        email: user.email
+    });
+
+    const refreshToken = await createRefreshToken(user.id);
+
+    return {
+        user: new UserDto(user),
+        accessToken,
+        refreshToken
+    };
+}
+
+
+    //connexion 2fa
+    static async verifyLogin2FA(userId, token) {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+
+        if (!user || !user.twoFactorSecret) {
+            throw new UnauthorizedException("Action non autorisée ou 2FA non configurée");
+        }
+
+        const isValid = verifyTwoFactorToken(token, user.twoFactorSecret);
+
+        if (!isValid) {
+            throw new UnauthorizedException("Code 2FA invalide ou expiré");
+        }
+
 
         const accessToken = await generateAccessToken({
             id: user.id,
@@ -84,35 +154,6 @@ export class UserService {
             refreshToken
         };
     }
-
-    //connexion 2fa
-    static async verifyLogin2FA(userId, token) {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-
-    if (!user || !user.twoFactorSecret) {
-        throw new UnauthorizedException("Action non autorisée ou 2FA non configurée");
-    }
-
-    const isValid = verifyTwoFactorToken(token, user.twoFactorSecret);
-
-    if (!isValid) {
-        throw new UnauthorizedException("Code 2FA invalide ou expiré");
-    }
-
-    
-    const accessToken = await generateAccessToken({
-        id: user.id,
-        email: user.email
-    });
-
-    const refreshToken = await createRefreshToken(user.id);
-
-    return {
-        user: new UserDto(user),
-        accessToken,
-        refreshToken
-    };
-}
 
     // 3. Inscription via GitHub (OAuth)
     static async registerGithubUser(userData) {
@@ -171,7 +212,7 @@ export class UserService {
             }
         })
     }
-    
+
     static async saveLoginHistory(userId, data) {
         return prisma.loginHistory.create({
             data: {
@@ -204,28 +245,66 @@ export class UserService {
             throw new UnauthorizedException("Refresh Token invalide ou expiré");
         }
 
+        // 1. Générer le nouvel Access Token
         const accessToken = await generateAccessToken({
             id: storedToken.user.id,
             email: storedToken.user.email
         });
 
-        return { accessToken };
+        //on utilise une transaction pour invalider l'ancien et créer le nouveau Refresh Token
+        const newRefreshToken = await prisma.$transaction(async (tx) => {
+
+            await tx.refreshToken.update({
+                where: { token: token },
+                data: { revokedAt: new Date() }
+            });
+
+            // Créer un nouveau Refresh Token
+            const tokenString = crypto.randomBytes(512).toString("hex");
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 7);
+
+            return await tx.refreshToken.create({
+                data: {
+                    token: tokenString,
+                    userId: storedToken.user.id,
+                    expiresAt,
+                },
+            });
+        });
+        return {
+            accessToken,
+            refreshToken: newRefreshToken.token // On récupère la propriété .token de l'objet retourné
+        };
     }
 
     static async logout(refreshToken, accessToken) {
-        // Invalider le refresh token
-        await prisma.refreshToken.updateMany({
-            where: { token: refreshToken },
+        const storedToken = await prisma.refreshToken.findFirst({
+            where: {
+                token: refreshToken,
+                revokedAt: null
+            }
+        });
+        if (!storedToken) {
+            throw new UnauthorizedException("Ce refresh token est invalide ou déjà révoqué");
+        }
+
+        await prisma.refreshToken.update({
+            where: { id: storedToken.id },
             data: { revokedAt: new Date() }
         });
-
-        // Blacklister l'access token
         if (accessToken) {
+            const decoded = jwt.decode(accessToken); // decoder le token pour lire sa vraie date d'expiration
+            const expiryDate = new Date(decoded.exp * 1000);// decoded.exp est en secondes, on le convertit en millisecondes pour l'objet Date
+
+
             await prisma.blacklistedAccessToken.create({
+
                 data: {
                     token: accessToken,
-                    expiresAt: new Date(Date.now() + 15 * 60 * 1000)
+                    expiresAt: expiryDate
                 }
+
             });
         }
     }
@@ -246,11 +325,12 @@ export class UserService {
             }
         });
 
-        const url = `http://localhost:3000/auth/emailVerification?code=${emailVerifyToken}&email=${email}`;
-        await EmailService.sendEmail(email, "Email Verification", `<a href=${url}>Cliquer sur ce lien pour vérifier votre email</a>`);
-        console.log(`--- SIMULATION EMAIL ---`);
-        console.log(`Lien: http://localhost:3000/reset_password?token=${token}`);
-        console.log(`-------------------------`);
+        const url = `http://localhost:3000/reset_password?token=${token}`;
+        await EmailService.sendEmail(
+            email,
+            "Réinitialisation de mot de passe",
+            `<a href="${url}">Cliquer ici pour modifier votre mot de passe</a>`
+        );
     }
 
     static async resetPassword(token, newPassword) {
@@ -264,8 +344,8 @@ export class UserService {
         }
 
         const hashedPassword = await hashPassword(newPassword);
-
-        await prisma.$transaction([
+        try {
+            await prisma.$transaction([
             prisma.user.update({
                 where: { id: resetToken.userId },
                 data: { password: hashedPassword }
@@ -274,6 +354,11 @@ export class UserService {
                 where: { token }
             })
         ]);
+        } catch (error) {
+            throw new PrismaException(error);
+        }
+        
+
     }
 
     // 8. Changement de mot de passe (Profil)

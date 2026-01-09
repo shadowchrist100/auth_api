@@ -6,17 +6,19 @@ import { registerSchema, loginSchema } from "#schemas/user.schema";
 import { config } from "#config/env";
 import { ForbiddenException, UnauthorizedException } from "#lib/exceptions";
 import { generateAccessToken, createRefreshToken } from "#lib/jwt";
+import prisma from "#lib/prisma";
+
 
 
 export class UserController {
   static async emialVerification(req, res) {
-    const { code,email } = req.query;
-    
-    const user =await UserService.verifyEmail(email, code);
+    const { code, email } = req.query;
+
+    const user = await UserService.verifyEmail(email, code);
     return res.json({
-      success:true,
+      success: true,
       message: "Email verify successfully",
-      user : user
+      user: user
     })
   }
 
@@ -36,7 +38,7 @@ export class UserController {
     const validatedData = validateData(loginSchema, req.body);
     const { email, password } = validatedData;
 
-    const result = await UserService.login(email, password);
+    const result = await UserService.login(email, password,req);
 
     if (result.twoFactorRequired) {
       return res.json({
@@ -48,6 +50,24 @@ export class UserController {
         }
       });
     }
+
+    //Creation de session pour au login 
+  req.session.user = {
+    id: result.user.id,
+    email: result.user.email,
+    username: result.user.username,
+  };
+
+  // Enregistrement de l'historique de connexion
+await prisma.loginHistory.create({
+  data: {
+    userId: result.user.id,
+    ipAddress: req.ip,
+    userAgent: req.headers["user-agent"] ?? "unknown",
+    success: true
+  },
+});
+
 
     res.json({
       success: true,
@@ -87,9 +107,11 @@ export class UserController {
     }
 
     const result = await UserService.refresh(refreshToken);
+    console.log("Résultat du service:", result);
     res.json({
       success: true,
-      accessToken: result.accessToken
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken
     });
   }
 
@@ -187,32 +209,8 @@ export class UserController {
 
   }
 
-  static async refresh(req, res) {
-    const { refreshToken } = req.body;
-    if (!refreshToken) {
-      return res.status(400).json({ success: false, error: "Refresh token requis" });
-    }
-
-    const result = await UserService.refresh(refreshToken);
-    res.json({
-      success: true,
-      accessToken: result.accessToken
-    });
-  }
-
-  static async logout(req, res) {
-    const { refreshToken } = req.body;
-    // On récupère le token Bearer dans le header Authorization
-    const authHeader = req.headers.authorization;
-    const accessToken = authHeader && authHeader.split(' ')[1];
-
-    await UserService.logout(refreshToken, accessToken);
-
-    res.json({
-      success: true,
-      message: "Déconnexion réussie"
-    });
-  }
+  
+  
   static async getAll(req, res) {
     const users = await UserService.findAll();
     res.json({
@@ -243,7 +241,8 @@ export class UserController {
   }
 
   static async resetPassword(req, res) {
-    const { token, password } = req.body;
+    const { password } = req.body;
+    const { token } = req.query
     if (!token || !password) {
       throw new BadRequestException("Token et mot de passe requis");
     }
@@ -260,4 +259,35 @@ export class UserController {
 
     res.json({ success: true, message: "Mot de passe mis à jour" });
   }
-}
+
+    
+  //Controller pour vérifier si la session existe
+  static async checkSession(req, res) {
+    res.json({
+      success: true,
+      message: "Session valide",
+      user: req.session.user,
+    });
+  }
+
+  // Controller pour gérer l'historique des connexions
+  static async getLoginHistory(req, res) {
+    const history = await prisma.loginHistory.findMany({
+      where: {
+        userId: req.session.user.id,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    res.json({
+      success: true,
+      history,
+    });
+  }
+
+  
+} 
+
+
