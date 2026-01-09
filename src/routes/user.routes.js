@@ -7,11 +7,9 @@ import { requireSession } from "#middlewares/auth.middleware";
 
 const router = Router();
 
-// Consultation de la liste ou d'un utilisateur
-router.get("/",auth, asyncHandler(UserController.getAll));
-router.get("/:id",auth , asyncHandler(UserController.getById));
 
 router.post("/change-password", auth, asyncHandler(UserController.changePassword));
+
 
 // SESSION : vérifier si elle existe
 router.get(
