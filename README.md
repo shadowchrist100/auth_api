@@ -3,11 +3,13 @@
 Bienvenue sur AuthAPI, une solution robuste d'authentification construite avec Node.js, Express, et Prisma. Ce projet implémente l'authentification locale avec vérification par email et l'authentification tierce via l'OAuth 2.0 de GitHub.
 👥 Présentation de l'Équipe
 
-    Membre 1 : [Ton Nom] - Développeur Backend / Architecture API.
+    Membre 1 : [Lewhe Abel] - Authentification OAuth / Envoi d'Emails.
 
-    Membre 2 : [Nom Collègue] - Gestion Base de données / DevOps.
+    Membre 2 : [MOLOKE Maëlys] - Authentification de Base .
 
-    Membre 3 : [Nom Collègue] - Intégration Services (Emails & OAuth).
+    Membre 3 : [OSSENI Rosmiyath] - Gestion du Profil / Sécurité.
+
+    Membre 4 : [ETTEKA Samuel] - Authentifcation 2FA
 
 ✨ Fonctionnalités
 
@@ -19,19 +21,21 @@ Bienvenue sur AuthAPI, une solution robuste d'authentification construite avec N
 
     Gestion de Base de Données : Utilisation de Prisma ORM pour une manipulation fluide et sécurisée des données.
 
-    Sécurité : Protection contre les attaques CSRF via l'utilisation de state et validation stricte des entrées.
+    Sécurité : Protection contre les attaques CSRF via l'utilisation de state et validation stricte des entrées.  / Protection contre le brute Force
 
 🛠️ Stack Technique
 
     Runtime : Node.js
 
-    Framework : Express.js
-
     ORM : Prisma
 
-    Base de données : SQLite (ou PostgreSQL/MySQL)
+    Base de données : SQLite 
 
-    Emailing : Nodemailer (testé avec Mailhog)
+    Emailing : Nodemailer (testé avec Mailpit)
+
+    Cron : node-cron
+
+    OTP : otplib
 
 ⚙️ Installation et Configuration
 1. Clonage du projet
@@ -47,20 +51,8 @@ npm install
 
 3. Configuration des variables d'environnement
 
-Créez un fichier .env à la racine et remplissez-le :
-Extrait de code
+Créez un fichier .env à la racine et copiez y le contenu du fichier .env.example :
 
-DATABASE_URL="file:./dev.db"
-PORT=3000
-
-# GitHub OAuth
-GITHUB_CLIENT_ID="votre_id"
-GITHUB_CLIENT_SECRET="votre_secret"
-GITHUB_STATE="une_chaine_aleatoire"
-
-# Email Config (Exemple Mailhog)
-EMAIL_HOST="localhost"
-EMAIL_PORT=1025
 
 4. Initialisation de la base de données
 Bash
