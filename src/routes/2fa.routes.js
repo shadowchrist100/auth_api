@@ -3,7 +3,7 @@ import * as twoFactorController from '../controllers/twoFactor.controller.js';
 import { auth } from '../middlewares/auth.middleware.js'; 
 const router = Router();
 
-
+//activation ,desactivation 2fa
 router.post('/setup',auth, twoFactorController.setup2FA);
 router.post('/disable',auth, twoFactorController.disable2FA);
 router.post('/verifyAndEnable',auth,  twoFactorController.verifyAndEnable2FA);

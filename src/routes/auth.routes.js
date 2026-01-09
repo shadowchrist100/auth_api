@@ -8,6 +8,8 @@ const router = Router();
 // Inscription et Connexion
 router.post("/register", asyncHandler(UserController.register));
 router.post("/login", loginLimiter, asyncHandler(UserController.login));
+//connexion si 2fa activé
+router.post("/2faVerifyAndlogin", asyncHandler(UserController.verify2FALogin));
 
 router.get("/auth/emailVerification", asyncHandler(UserController.emialVerification));
 

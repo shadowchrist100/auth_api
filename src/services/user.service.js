@@ -6,6 +6,7 @@ import { UserDto } from "#dto/user.dto";
 import crypto from 'node:crypto';
 import { EmailService } from "#services/email.service";
 import jwt from 'jsonwebtoken'
+import { verifyTwoFactorToken } from "#services/twofactor.service";
 
 export class UserService {
     static async verifyEmail(email, code) {
@@ -62,6 +63,14 @@ export class UserService {
         if (!user || !(await verifyPassword(user.password, password))) {
             throw new UnauthorizedException("Identifiants invalides");
         }
+        
+        if (user.twoFactorEnabledAt) {
+        return {
+            twoFactorRequired: true,
+            userId: user.id,
+            message: "Double authentification requise"
+         };
+        }
 
         const accessToken = await generateAccessToken({
             id: user.id,
@@ -76,6 +85,35 @@ export class UserService {
             refreshToken
         };
     }
+
+    //connexion 2fa
+    static async verifyLogin2FA(userId, token) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user || !user.twoFactorSecret) {
+        throw new UnauthorizedException("Action non autorisée ou 2FA non configurée");
+    }
+
+    const isValid = verifyTwoFactorToken(token, user.twoFactorSecret);
+
+    if (!isValid) {
+        throw new UnauthorizedException("Code 2FA invalide ou expiré");
+    }
+
+    
+    const accessToken = await generateAccessToken({
+        id: user.id,
+        email: user.email
+    });
+
+    const refreshToken = await createRefreshToken(user.id);
+
+    return {
+        user: new UserDto(user),
+        accessToken,
+        refreshToken
+    };
+}
 
     // 3. Inscription via GitHub (OAuth)
     static async registerGithubUser(userData) {

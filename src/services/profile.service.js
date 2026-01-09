@@ -22,34 +22,36 @@ export class ProfileService {
 
     return user;
   }
+static async updateMe(userId, data) {
+  const existingUser = await prisma.user.findUnique({
+    where: { id: userId },
+  });
 
-  /** Met à jour le profil */
-  static async updateMe(userId, data) {
-    // Vérifier que l'utilisateur existe
-    const existingUser = await prisma.user.findUnique({ where: { id: userId } });
-    if (!existingUser || existingUser.disabledAt) {
-      throw new NotFoundException("Utilisateur introuvable");
-    }
-
-    // Mise à jour
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        createdAt: true,
-      },
-    });
-
-    return updatedUser;
+  if (!existingUser || existingUser.disabledAt) {
+    throw new NotFoundException("Utilisateur introuvable");
   }
+
+  const updateData = {};
+
+  if (data.email !== undefined) updateData.email = data.email;
+  if (data.firstName !== undefined) updateData.firstName = data.firstName;
+  if (data.lastName !== undefined) updateData.lastName = data.lastName;
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: updateData,
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      createdAt: true,
+    },
+  });
+
+  return updatedUser;
+}
+
 
   /** Désactive le compte (soft delete) */
   static async deleteMe(userId) {
