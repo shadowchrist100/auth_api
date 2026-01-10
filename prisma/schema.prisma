@@ -83,8 +83,8 @@ model PasswordResetToken {
 
 model LoginHistory {
   id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   ipAddress String?
   userAgent String?
   success   Boolean  // true si réussi

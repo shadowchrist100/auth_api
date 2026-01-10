@@ -18,7 +18,7 @@ export class UserController {
     return res.json({
       success: true,
       message: "Email verify successfully",
-      user: user
+      user: UserDto.transform(user)
     })
   }
 

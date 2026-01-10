@@ -59,71 +59,93 @@ export class UserService {
     }
 
     // Connexion
-static async login(email, password, req) {
-    const ip = req?.ip || req?.connection?.remoteAddress || null;
-    const userAgent = req?.headers["user-agent"] || "unknown";
+    static async login(email, password, req) {
+        const ip = req?.ip || req?.connection?.remoteAddress || null;
+        const userAgent = req?.headers["user-agent"] || "unknown";
+        const user = await prisma.user.findUnique({ where: { email } });
 
-    const user = await prisma.user.findUnique({ where: { email } });
 
-  
-    if (!user) {
-        await prisma.loginHistory.create({
-            data: {
-                userId: null,
-                ipAddress: ip,
-                userAgent,
-                success: false
-            }
-        });
-        throw new UnauthorizedException("Identifiants invalides");
-    }
+        if (!user) {
+            await prisma.loginHistory.create({
+                data: {
+                    userId: null,
+                    ipAddress: ip,
+                    userAgent,
+                    success: false
+                }
+            });
+            throw new UnauthorizedException("Identifiants invalides");
+        }
 
-   
-    const isPasswordValid = await verifyPassword(user.password, password);
-    if (!isPasswordValid) {
+
+        const isPasswordValid = await verifyPassword(user.password, password);
+        if (!isPasswordValid) {
+            await prisma.loginHistory.create({
+                data: {
+                    userId: user.id,
+                    ipAddress: ip,
+                    userAgent,
+                    success: false
+                }
+            });
+            throw new UnauthorizedException("Identifiants invalides");
+        }
+
+
+        if (user.twoFactorEnabledAt) {
+            return {
+                twoFactorRequired: true,
+                userId: user.id,
+                message: "Double authentification requise"
+            };
+        }
+
+
         await prisma.loginHistory.create({
             data: {
                 userId: user.id,
                 ipAddress: ip,
                 userAgent,
-                success: false
+                success: true
             }
         });
-        throw new UnauthorizedException("Identifiants invalides");
-    }
 
-   
-    if (user.twoFactorEnabledAt) {
-        return {
-            twoFactorRequired: true,
-            userId: user.id,
-            message: "Double authentification requise"
-        };
-    }
+        const accessToken = await generateAccessToken({
+            id: user.id,
+            email: user.email
+        });
 
-   
-    await prisma.loginHistory.create({
-        data: {
+        const isOldRefreshToken = await prisma.refreshToken.findFirst({ where:{
             userId: user.id,
-            ipAddress: ip,
-            userAgent,
-            success: true
+            userAgent: userAgent,
+            revokedAt: null
+        }  })
+        if (isOldRefreshToken) {
+            const newRefreshToken = await prisma.$transaction(async (tx) => {
+
+                await tx.refreshToken.update({
+                    where: { token: isOldRefreshToken.token },
+                    data: { revokedAt: new Date() }
+                });
+
+                // Créer un nouveau Refresh Token
+                const token = await createRefreshToken(user.id);
+                return token;
+            });
+            return {
+                user: new UserDto(user),
+                accessToken,
+                newRefreshToken
+            };
+        } else {
+            const refreshToken = await createRefreshToken(user.id);
+            return {
+                user: new UserDto(user),
+                accessToken,
+                refreshToken
+            };
         }
-    });
-
-    const accessToken = await generateAccessToken({
-        id: user.id,
-        email: user.email
-    });
-
-    const refreshToken = await createRefreshToken(user.id);
-
-    return {
-        user: new UserDto(user),
-        accessToken,
-        refreshToken
-    };
-}
+    }
 
 
     //connexion 2fa
@@ -346,18 +368,18 @@ static async login(email, password, req) {
         const hashedPassword = await hashPassword(newPassword);
         try {
             await prisma.$transaction([
-            prisma.user.update({
-                where: { id: resetToken.userId },
-                data: { password: hashedPassword }
-            }),
-            prisma.passwordResetToken.delete({
-                where: { token }
-            })
-        ]);
+                prisma.user.update({
+                    where: { id: resetToken.userId },
+                    data: { password: hashedPassword }
+                }),
+                prisma.passwordResetToken.delete({
+                    where: { token }
+                })
+            ]);
         } catch (error) {
             throw new PrismaException(error);
         }
-        
+
 
     }
 

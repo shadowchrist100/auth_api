@@ -9,6 +9,7 @@ const router = Router();
 
 
 router.post("/change-password", auth, asyncHandler(UserController.changePassword));
+router.post("/logout",auth, asyncHandler(UserController.logout));
 
 
 // SESSION : vérifier si elle existe
@@ -24,6 +25,7 @@ router.get(
   requireSession,
   asyncHandler(UserController.getLoginHistory)
 );
+
 
 export default router;
 

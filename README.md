@@ -21,7 +21,7 @@ Bienvenue sur AuthAPI, une solution robuste d'authentification construite avec N
 
 ## 🛠️ Stack Technique
 
-- **Runtime** : Node.js
+- **Runtime** : Node.js (Express)
 - **ORM** : Prisma
 - **Base de données** : SQLite
 - **Emailing** : Nodemailer (testé avec Mailpit)
@@ -82,8 +82,8 @@ L'API sera accessible sur `http://localhost:3000`.
 | GET     | `/profile/me`              | Avoir les informations d'un utilisateur          |
 | PUT     | `/profile/me`              | Modifier les informations d'un utilisateur       |
 | DELETE  | `/profile/me`              | Supprimer un utilisateur                         |
-| GET     | `/users/me/session`              | Vérifier si une session est active               |
-| GET     | `/users/me/login-history`        | Historique de connection d'un utilisateur        |
+| GET     | `/users/me/session`        | Vérifier si une session est active               |
+| GET     | `/users/me/login-history`  | Historique de connection d'un utilisateur        |
 
 ## 🧪 Tests de développement
 
