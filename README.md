@@ -1,86 +1,100 @@
-🚀 AuthAPI - Système d'Authentification Complet
+# 🚀 AuthAPI - Système d'Authentification Complet
 
 Bienvenue sur AuthAPI, une solution robuste d'authentification construite avec Node.js, Express, et Prisma. Ce projet implémente l'authentification locale avec vérification par email et l'authentification tierce via l'OAuth 2.0 de GitHub.
-👥 Présentation de l'Équipe
 
-    Membre 1 : [Lewhe Abel] - Authentification OAuth / Envoi d'Emails.
+## 👥 Présentation de l'Équipe
 
-    Membre 2 : [MOLOKE Maëlys] - Authentification de Base .
+- **Membre 1** : [Lewhe Abel] - Authentification OAuth / Envoi d'Emails.
+- **Membre 2** : [MOLOKE Maëlys] - Authentification de Base.
+- **Membre 3** : [OSSENI Rosmiyath] - Gestion du Profil / Sécurité.
+- **Membre 4** : [ETTEKA Samuel] - Authentification 2FA.
+- **Membre 5** : [OGOUTOLOU Bayane] - Gestion des Sessions.
 
-    Membre 3 : [OSSENI Rosmiyath] - Gestion du Profil / Sécurité.
+## ✨ Fonctionnalités
 
-    Membre 4 : [ETTEKA Samuel] - Authentifcation 2FA
+- **Authentification Classique** : Inscription et Connexion avec hachage de mot de passe (Argon2/Bcrypt).
+- **Vérification par Email** : Envoi de codes uniques via SMTP pour valider les comptes.
+- **GitHub OAuth 2.0** : Connexion simplifiée via les comptes GitHub.
+- **Authentification 2FA**
+- **Gestion de Base de Données** : Utilisation de Prisma ORM pour une manipulation fluide et sécurisée des données.
+- **Sécurité** : Protection contre les attaques CSRF via l'utilisation de state et validation stricte des entrées. / Protection contre le brute Force.
 
-✨ Fonctionnalités
+## 🛠️ Stack Technique
 
-    Authentification Classique : Inscription et Connexion avec hachage de mot de passe (Argon2/Bcrypt).
+- **Runtime** : Node.js (Express)
+- **ORM** : Prisma
+- **Base de données** : SQLite
+- **Emailing** : Nodemailer (testé avec Mailpit)
+- **Cron** : node-cron
+- **OTP** : otplib
 
-    Vérification par Email : Envoi de codes uniques via SMTP pour valider les comptes.
+## ⚙️ Installation et Configuration
 
-    GitHub OAuth 2.0 : Connexion simplifiée en un clic via les comptes GitHub.
+### 1. Clonage du projet
 
-    Gestion de Base de Données : Utilisation de Prisma ORM pour une manipulation fluide et sécurisée des données.
+```bash
+git clone https://github.com/shadowchrist100/auth_api.git
+cd auth_api
+```
 
-    Sécurité : Protection contre les attaques CSRF via l'utilisation de state et validation stricte des entrées.  / Protection contre le brute Force
+### 2. Installation des dépendances
 
-🛠️ Stack Technique
-
-    Runtime : Node.js
-
-    ORM : Prisma
-
-    Base de données : SQLite 
-
-    Emailing : Nodemailer (testé avec Mailpit)
-
-    Cron : node-cron
-
-    OTP : otplib
-
-⚙️ Installation et Configuration
-1. Clonage du projet
-Bash
-
-git clone https://github.com/votre-repo/auth-api.git
-cd auth-api
-
-2. Installation des dépendances
-Bash
-
+```bash
 npm install
+```
 
-3. Configuration des variables d'environnement
+### 3. Configuration des variables d'environnement
 
-Créez un fichier .env à la racine et copiez y le contenu du fichier .env.example :
+Créez un fichier `.env` à la racine et copiez-y le contenu du fichier `.env.example` :
 
+### 4. Initialisation de la base de données
 
-4. Initialisation de la base de données
-Bash
-
+```bash
 npx prisma db push
 npx prisma generate
+```
 
-🚀 Utilisation
-Démarrage
-Bash
+## 🚀 Utilisation
 
+### Démarrage
+
+```bash
 npm run dev
+```
 
-L'API sera accessible sur http://localhost:3000.
-Points de terminaison (Endpoints) principaux
-Méthode	Route	Description
-POST	/register	Inscription d'un nouvel utilisateur.
-GET	/auth/emailVerification	Valide le compte via le code reçu par mail.
-POST	/login	Connexion et génération de session/token.
-GET	/auth/github	Redirige vers la page de connexion GitHub.
-GET	/auth/githubCallback	Callback gérant l'échange de token GitHub.
-🧪 Tests de développement
+**mailpit** - _Pour l'envoi d'email_
 
-Pour tester l'envoi d'emails en local, nous recommandons l'utilisation de Mailhog. Une fois lancé, vous pouvez voir les emails de vérification sur http://localhost:8025.
-🔒 Sécurité
+L'API sera accessible sur `http://localhost:3000`.
 
-    Les mots de passe sont hachés avant stockage.
+### Points de terminaison (Endpoints) principaux
 
-    Le paramètre state est vérifié lors des retours OAuth pour empêcher les injections.
+| Méthode | Route                      | Description                                     |
+|---------|----------------------------|--------------------------------------------------|
+| POST    | `/register`                | Inscription d'un nouvel utilisateur.             |
+| GET     | `/auth/emailVerification`  | Valide l'email après un register                 |
+| GET     | `/users/verify_email`      | Valide l'email après authentification
+| POST    | `/login`                   | Connexion et génération de session/token.        |
+| GET     | `/auth/github`             | Redirige vers la page de connexion GitHub.       |
+| POST    | `/2fa/setup`               | Activation de l'authentification à double facteur|
+| POST    |  `/2faVerifyAndlogin`      | Valide l'authentification à double facteur       | 
+| POST    | `/refresh`                 | Rafraichir l'access token et le refresh token    |
+| POST    | `/forgot_password`         | Route pour changer de mot de passe en cas d'oubli|
+| POST    | `/logout`                  | Déconnecter un utilisateur                       |
+| GET     | `/profile/me`              | Avoir les informations d'un utilisateur          |
+| PUT     | `/profile/me`              | Modifier les informations d'un utilisateur       |
+| DELETE  | `/profile/me`              | Supprimer un utilisateur                         |
+| GET     | `/users/me/session`        | Vérifier si une session est active               |
+| GET     | `/users/me/login-history`  | Historique de connection d'un utilisateur        |
+| GET     | `/users/sessions`          | Affiche les sessions de l'utilisateur actives    |       
+| GET     | `/users/revoque_session/:id`| Révoquer une session spécifique                 |
+| GET     | `/users/revoqueAll`        | Révoquer toutes les autres sessions
 
-    Les données entrantes sont validées via un schéma (Joi ou Zod).
+## 🧪 Tests de développement
+
+Pour tester l'envoi d'emails en local, nous recommandons l'utilisation de **Mailpit**. Une fois lancé, vous pouvez voir les emails de vérification sur `http://localhost:8025`.
+
+## 🔒 Sécurité
+
+- Les mots de passe sont hachés avant stockage.
+- Le paramètre `state` est vérifié lors des retours OAuth pour empêcher les injections.
+- Les données entrantes sont validées via un schéma (Zod).

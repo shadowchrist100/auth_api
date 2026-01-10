@@ -17,10 +17,15 @@ export class EmailService {
         }
 
         // send email
-        transporter.sendMail(mailOptions, function(error, info){
+        try {
+            transporter.sendMail(mailOptions, function(error, info){
             if (error) {
                 throw new NotFoundException(error)
             }
         })
+        } catch (error) {
+                throw new NotFoundException(error)
+        }
+        
     }
 }

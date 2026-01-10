@@ -1,5 +1,5 @@
 import prisma from "#lib/prisma";
-import { generateAccessToken, createRefreshToken, verifyRefreshToken } from "#lib/jwt";
+import { generateAccessToken, createRefreshToken, verifyRefreshToken, verifyAccessToken } from "#lib/jwt";
 import { hashPassword, verifyPassword } from "#lib/password";
 import { ConflictException, UnauthorizedException, NotFoundException, PrismaException } from "#lib/exceptions";
 import { UserDto } from "#dto/user.dto";
@@ -25,6 +25,22 @@ export class UserService {
             where: { email },
             data: {
                 emailVerifiedAt: new Date()
+            }
+        })
+    }
+
+    static async emailVerify(email) {
+        const emailVerifyToken = crypto.randomBytes(512).toString("hex");
+        const expiresAt = new Date(Date.now() + 900000); // 15min
+
+        // envoyer un mail pour vérifer le mail 
+        const url = `http://localhost:3000/auth/emailVerification?code=${emailVerifyToken}&email=${email}`;
+        await EmailService.sendEmail(email, "Email Verification", `<a href=${url}>Cliquer sur ce lien pour vérifier votre email</a>`);
+        await prisma.user.update({
+            where : {email},
+            data: {
+                emailVerifyToken,
+                expiresAt
             }
         })
     }
@@ -59,75 +75,101 @@ export class UserService {
     }
 
     // Connexion
-static async login(email, password, req) {
-    const ip = req?.ip || req?.connection?.remoteAddress || null;
-    const userAgent = req?.headers["user-agent"] || "unknown";
+    static async login(email, password, req) {
+        const ip = req?.ip || req?.connection?.remoteAddress || null;
+        const userAgent = req?.headers["user-agent"] || "unknown";
+        const user = await prisma.user.findUnique({ where: { email } });
 
-    const user = await prisma.user.findUnique({ where: { email } });
 
-  
-    if (!user) {
-        await prisma.loginHistory.create({
-            data: {
-                userId: null,
-                ipAddress: ip,
-                userAgent,
-                success: false
-            }
-        });
-        throw new UnauthorizedException("Identifiants invalides");
-    }
+        if (!user) {
+            await prisma.loginHistory.create({
+                data: {
+                    userId: null,
+                    ipAddress: ip,
+                    userAgent,
+                    success: false
+                }
+            });
+            throw new UnauthorizedException("Identifiants invalides");
+        }
 
-   
-    const isPasswordValid = await verifyPassword(user.password, password);
-    if (!isPasswordValid) {
+
+        const isPasswordValid = await verifyPassword(user.password, password);
+        if (!isPasswordValid) {
+            await prisma.loginHistory.create({
+                data: {
+                    userId: user.id,
+                    ipAddress: ip,
+                    userAgent,
+                    success: false
+                }
+            });
+            throw new UnauthorizedException("Identifiants invalides");
+        }
+
+
+        if (user.twoFactorEnabledAt) {
+            return {
+                twoFactorRequired: true,
+                userId: user.id,
+                message: "Double authentification requise"
+            };
+        }
+
+
         await prisma.loginHistory.create({
             data: {
                 userId: user.id,
                 ipAddress: ip,
                 userAgent,
-                success: false
+                success: true
             }
         });
-        throw new UnauthorizedException("Identifiants invalides");
-    }
 
-   
-    if (user.twoFactorEnabledAt) {
-        return {
-            twoFactorRequired: true,
-            userId: user.id,
-            message: "Double authentification requise"
-        };
-    }
+        const accessToken = await generateAccessToken({
+            id: user.id,
+            email: user.email
+        });
 
-   
-    await prisma.loginHistory.create({
-        data: {
-            userId: user.id,
-            ipAddress: ip,
-            userAgent,
-            success: true
+        const isOldRefreshToken = await prisma.refreshToken.findFirst({
+            where: {
+                userId: user.id,
+                userAgent: userAgent,
+                revokedAt: null
+            }
+        })
+        if (isOldRefreshToken) {
+            const newRefreshToken = await prisma.$transaction(async (tx) => {
+
+                await tx.refreshToken.update({
+                    where: { token: isOldRefreshToken.token },
+                    data: { revokedAt: new Date() }
+                });
+
+                // Créer un nouveau Refresh Token
+                const token = await createRefreshToken(user.id, userAgent, ip);
+                return token;
+            });
+            return {
+                user: new UserDto(user),
+                accessToken,
+                newRefreshToken
+            };
+        } else {
+            const refreshToken = await createRefreshToken(user.id, userAgent, ip);
+            return {
+                user: new UserDto(user),
+                accessToken,
+                refreshToken,
+            };
         }
-    });
-
-    const accessToken = await generateAccessToken({
-        id: user.id,
-        email: user.email
-    });
-
-    const refreshToken = await createRefreshToken(user.id);
-
-    return {
-        user: new UserDto(user),
-        accessToken,
-        refreshToken
-    };
-}
+    }
 
 
     //connexion 2fa
-    static async verifyLogin2FA(userId, token) {
+    static async verifyLogin2FA(userId, token, req) {
+        const ip = req?.ip || req?.connection?.remoteAddress || null;
+        const userAgent = req?.headers["user-agent"] || "unknown";
         const user = await prisma.user.findUnique({ where: { id: userId } });
 
         if (!user || !user.twoFactorSecret) {
@@ -146,7 +188,7 @@ static async login(email, password, req) {
             email: user.email
         });
 
-        const refreshToken = await createRefreshToken(user.id);
+        const refreshToken = await createRefreshToken(user.id, userAgent, ip);
 
         return {
             user: new UserDto(user),
@@ -178,13 +220,15 @@ static async login(email, password, req) {
     }
 
     // 4. Connexion via GitHub
-    static async loginGithubUser(user) {
+    static async loginGithubUser(user, req) {
+        const ip = req?.ip || req?.connection?.remoteAddress || null;
+        const userAgent = req?.headers["user-agent"] || "unknown";
         const accessToken = await generateAccessToken({
             id: user.id,
             email: user.email
         });
 
-        const refreshToken = await createRefreshToken(user.id);
+        const refreshToken = await createRefreshToken(user.id, userAgent, ip);
 
         return {
             user: new UserDto(user),
@@ -223,9 +267,55 @@ static async login(email, password, req) {
         });
     }
 
-    // 5. Utilitaires de recherche
-    static async findAll() {
-        return prisma.user.findMany();
+    static async activeSessions(req) {
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.split(' ')[1];
+        const payload = await verifyAccessToken(token);
+        const userTokens = await prisma.refreshToken.findMany({
+            where: {
+                userId: payload.id,
+                revokedAt: null,
+                expiresAt: {
+                    gt: new Date()
+                }
+            }
+        });
+        const sessions = userTokens.map((token) => {
+            return {
+                id: token.id,
+                userId: token.userId,
+                userAgent: token.userAgent,
+                ipAddress: token.ipAddress,
+                createdAt: token.createdAt
+            }
+        })
+        return sessions;
+    }
+
+    static async revokeById(id, userId) {
+        return await prisma.refreshToken.updateMany({
+            where: {
+                id: id,
+                userId: userId
+            },
+            data: {
+                revokedAt: new Date(),
+            }
+        });
+    }
+    static async revokeOthers(userId, currentUserAgent) {
+        return await prisma.refreshToken.updateMany({
+            where: {
+                userId: userId,
+                revokedAt: null,
+                userAgent: {
+                    not: currentUserAgent
+                }
+            },
+            data: {
+                revokedAt: new Date()
+            }
+        });
     }
 
     static async findById(id) {
@@ -251,6 +341,12 @@ static async login(email, password, req) {
             email: storedToken.user.email
         });
 
+        const oldRefreshToken = await prisma.refreshToken.findFirst({
+            where: {
+                token: token
+            }
+        });
+
         //on utilise une transaction pour invalider l'ancien et créer le nouveau Refresh Token
         const newRefreshToken = await prisma.$transaction(async (tx) => {
 
@@ -269,6 +365,8 @@ static async login(email, password, req) {
                     token: tokenString,
                     userId: storedToken.user.id,
                     expiresAt,
+                    ipAddress: oldRefreshToken.ipAddress,
+                    userAgent: oldRefreshToken.userAgent
                 },
             });
         });
@@ -346,18 +444,18 @@ static async login(email, password, req) {
         const hashedPassword = await hashPassword(newPassword);
         try {
             await prisma.$transaction([
-            prisma.user.update({
-                where: { id: resetToken.userId },
-                data: { password: hashedPassword }
-            }),
-            prisma.passwordResetToken.delete({
-                where: { token }
-            })
-        ]);
+                prisma.user.update({
+                    where: { id: resetToken.userId },
+                    data: { password: hashedPassword }
+                }),
+                prisma.passwordResetToken.delete({
+                    where: { token }
+                })
+            ]);
         } catch (error) {
             throw new PrismaException(error);
         }
-        
+
 
     }
 
