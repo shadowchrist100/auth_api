@@ -4,9 +4,10 @@ import { UserDto } from "#dto/user.dto";
 import { validateData } from "#lib/validate";
 import { registerSchema, loginSchema } from "#schemas/user.schema";
 import { config } from "#config/env";
-import { ForbiddenException, UnauthorizedException } from "#lib/exceptions";
+import { ForbiddenException, UnauthorizedException, BadRequestException } from "#lib/exceptions";
 import { generateAccessToken, createRefreshToken } from "#lib/jwt";
 import prisma from "#lib/prisma";
+import { success } from "zod";
 
 
 
@@ -19,6 +20,15 @@ export class UserController {
       success: true,
       message: "Email verify successfully",
       user: UserDto.transform(user)
+    })
+  }
+
+  static async verifyEmail(req, res) {
+    const user = await UserService.findById(req.user.id);
+    await UserService.emailVerify(user.email)
+    res.json({
+      success: true,
+      message: "Un lien de vérification vous a été envoyé par email"
     })
   }
 
@@ -75,7 +85,7 @@ export class UserController {
       data: {
         user: UserDto.transform(result.user),
         accessToken: result.accessToken,
-        refreshToken: result.refreshToken
+        refreshToken: result.refreshToken ? result.refreshToken : result.newRefreshToken
       }
     });
   }
@@ -217,6 +227,25 @@ export class UserController {
     });
   }
 
+  static async revokeSessionById(req, res) {
+    const { id } = req.params;
+    await UserService.revokeById(id, req.user.id);
+    return res.json({
+      success: true,
+      message: "Session révoqué"
+    })
+  }
+
+  static async revokeOthers(req, res) {
+    const userAgent = req.headers['user-agent'] || "unknown";
+    await UserService.revokeOthers(req.user.id, userAgent);
+
+    return res.json({
+      success: true,
+      message: "Sessions révoqués"
+    })
+  }
+
   static async getAll(req, res) {
     const users = await UserService.findAll();
     res.json({
@@ -233,28 +262,29 @@ export class UserController {
     });
   }
   static async forgotPassword(req, res) {
-    const { email } = req.body;
-
-    if (!email) {
+    try {
+      const { email } = req.body;
+      await UserService.forgotPassword(email);
+      res.json({
+        success: true,
+        message: "Si cet email existe, un lien de récupération a été envoyé."
+      });
+    } catch (error) {
       return res.status(400).json({ success: false, error: "Email requis" });
     }
 
-    await UserService.forgotPassword(email);
-    res.json({
-      success: true,
-      message: "Si cet email existe, un lien de récupération a été envoyé."
-    });
   }
 
   static async resetPassword(req, res) {
-    const { password } = req.body;
-    const { token } = req.query
-    if (!token || !password) {
+    try {
+      const { password } = req.body;
+      const { token } = req.query;
+      await UserService.resetPassword(token, password);
+      res.json({ success: true, message: "Mot de passe modifié avec succès." });
+    } catch (error) {
       throw new BadRequestException("Token et mot de passe requis");
     }
 
-    await UserService.resetPassword(token, password);
-    res.json({ success: true, message: "Mot de passe modifié avec succès." });
   }
 
 

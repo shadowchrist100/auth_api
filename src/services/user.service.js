@@ -28,6 +28,22 @@ export class UserService {
             }
         })
     }
+
+    static async emailVerify(email) {
+        const emailVerifyToken = crypto.randomBytes(512).toString("hex");
+        const expiresAt = new Date(Date.now() + 900000); // 15min
+
+        // envoyer un mail pour vérifer le mail 
+        const url = `http://localhost:3000/auth/emailVerification?code=${emailVerifyToken}&email=${email}`;
+        await EmailService.sendEmail(email, "Email Verification", `<a href=${url}>Cliquer sur ce lien pour vérifier votre email</a>`);
+        await prisma.user.update({
+            where : {email},
+            data: {
+                emailVerifyToken,
+                expiresAt
+            }
+        })
+    }
     // Inscription 
     static async register(data) {
         const { email, password, firstName, lastName } = data;
@@ -131,7 +147,7 @@ export class UserService {
                 });
 
                 // Créer un nouveau Refresh Token
-                const token = await createRefreshToken(user.id, userAgent , ip);
+                const token = await createRefreshToken(user.id, userAgent, ip);
                 return token;
             });
             return {
@@ -140,7 +156,7 @@ export class UserService {
                 newRefreshToken
             };
         } else {
-            const refreshToken = await createRefreshToken(user.id, userAgent , ip);
+            const refreshToken = await createRefreshToken(user.id, userAgent, ip);
             return {
                 user: new UserDto(user),
                 accessToken,
@@ -172,7 +188,7 @@ export class UserService {
             email: user.email
         });
 
-        const refreshToken = await createRefreshToken(user.id, userAgent , ip);
+        const refreshToken = await createRefreshToken(user.id, userAgent, ip);
 
         return {
             user: new UserDto(user),
@@ -204,7 +220,7 @@ export class UserService {
     }
 
     // 4. Connexion via GitHub
-    static async loginGithubUser(user,req) {
+    static async loginGithubUser(user, req) {
         const ip = req?.ip || req?.connection?.remoteAddress || null;
         const userAgent = req?.headers["user-agent"] || "unknown";
         const accessToken = await generateAccessToken({
@@ -212,7 +228,7 @@ export class UserService {
             email: user.email
         });
 
-        const refreshToken = await createRefreshToken(user.id, userAgent , ip);
+        const refreshToken = await createRefreshToken(user.id, userAgent, ip);
 
         return {
             user: new UserDto(user),
@@ -251,22 +267,22 @@ export class UserService {
         });
     }
 
-    // 5. Utilitaires de recherche
     static async activeSessions(req) {
         const authHeader = req.headers.authorization;
         const token = authHeader && authHeader.split(' ')[1];
         const payload = await verifyAccessToken(token);
         const userTokens = await prisma.refreshToken.findMany({
             where: {
-                userId: payload.id,   
-                revokedAt: null,      
+                userId: payload.id,
+                revokedAt: null,
                 expiresAt: {
-                    gt: new Date()    
+                    gt: new Date()
                 }
             }
         });
         const sessions = userTokens.map((token) => {
             return {
+                id: token.id,
                 userId: token.userId,
                 userAgent: token.userAgent,
                 ipAddress: token.ipAddress,
@@ -274,6 +290,32 @@ export class UserService {
             }
         })
         return sessions;
+    }
+
+    static async revokeById(id, userId) {
+        return await prisma.refreshToken.updateMany({
+            where: {
+                id: id,
+                userId: userId
+            },
+            data: {
+                revokedAt: new Date(),
+            }
+        });
+    }
+    static async revokeOthers(userId, currentUserAgent) {
+        return await prisma.refreshToken.updateMany({
+            where: {
+                userId: userId,
+                revokedAt: null,
+                userAgent: {
+                    not: currentUserAgent
+                }
+            },
+            data: {
+                revokedAt: new Date()
+            }
+        });
     }
 
     static async findById(id) {
@@ -299,9 +341,11 @@ export class UserService {
             email: storedToken.user.email
         });
 
-        const oldRefreshToken = await prisma.refreshToken.findFirst( {
-            token: token
-        } );
+        const oldRefreshToken = await prisma.refreshToken.findFirst({
+            where: {
+                token: token
+            }
+        });
 
         //on utilise une transaction pour invalider l'ancien et créer le nouveau Refresh Token
         const newRefreshToken = await prisma.$transaction(async (tx) => {

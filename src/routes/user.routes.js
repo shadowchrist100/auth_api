@@ -10,7 +10,8 @@ const router = Router();
 
 router.post("/change-password", auth, asyncHandler(UserController.changePassword));
 router.post("/logout",auth, asyncHandler(UserController.logout));
-
+// vérifier son email
+router.get("/verify_email", auth, asyncHandler(UserController.verifyEmail));
 
 // SESSION : vérifier si elle existe
 router.get(
@@ -27,6 +28,8 @@ router.get(
 );
 
 router.get("/sessions", auth, asyncHandler(UserController.getSessions));
+router.get("/revoque_session/:id", auth, asyncHandler(UserController.revokeSessionById))
+router.get("/revoqueAll", auth, asyncHandler(UserController.revokeOthers));
 
 export default router;
 

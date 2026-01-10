@@ -18,7 +18,6 @@ router.post("/refresh", asyncHandler(UserController.refresh));
 
 router.post("/forgot_password", asyncHandler(UserController.forgotPassword));
 router.post("/reset_password", asyncHandler(UserController.resetPassword));
-// router.post("/reset_password", asyncHandler(UserController.passwordReset));
 
 // authentification via github
 router.get("/auth/github", asyncHandler(UserController.githubAuth));
