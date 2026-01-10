@@ -71,7 +71,8 @@ L'API sera accessible sur `http://localhost:3000`.
 | Méthode | Route                      | Description                                     |
 |---------|----------------------------|--------------------------------------------------|
 | POST    | `/register`                | Inscription d'un nouvel utilisateur.             |
-| GET     | `/auth/emailVerification`  | Valide le compte via le code reçu par mail.      |
+| GET     | `/auth/emailVerification`  | Valide l'email après un register                 |
+| GET     | `/users/verify_email`      | Valide l'email après authentification
 | POST    | `/login`                   | Connexion et génération de session/token.        |
 | GET     | `/auth/github`             | Redirige vers la page de connexion GitHub.       |
 | POST    | `/2fa/setup`               | Activation de l'authentification à double facteur|
@@ -84,6 +85,9 @@ L'API sera accessible sur `http://localhost:3000`.
 | DELETE  | `/profile/me`              | Supprimer un utilisateur                         |
 | GET     | `/users/me/session`        | Vérifier si une session est active               |
 | GET     | `/users/me/login-history`  | Historique de connection d'un utilisateur        |
+| GET     | `/users/sessions`          | Affiche les sessions de l'utilisateur actives    |       
+| GET     | `/users/revoque_session/:id`| Révoquer une session spécifique                 |
+| GET     | `/users/revoqueAll`        | Révoquer toutes les autres sessions
 
 ## 🧪 Tests de développement
 
