@@ -1,5 +1,5 @@
 import prisma from "#lib/prisma";
-import { generateAccessToken, createRefreshToken, verifyRefreshToken } from "#lib/jwt";
+import { generateAccessToken, createRefreshToken, verifyRefreshToken, verifyAccessToken } from "#lib/jwt";
 import { hashPassword, verifyPassword } from "#lib/password";
 import { ConflictException, UnauthorizedException, NotFoundException, PrismaException } from "#lib/exceptions";
 import { UserDto } from "#dto/user.dto";
@@ -115,11 +115,13 @@ export class UserService {
             email: user.email
         });
 
-        const isOldRefreshToken = await prisma.refreshToken.findFirst({ where:{
-            userId: user.id,
-            userAgent: userAgent,
-            revokedAt: null
-        }  })
+        const isOldRefreshToken = await prisma.refreshToken.findFirst({
+            where: {
+                userId: user.id,
+                userAgent: userAgent,
+                revokedAt: null
+            }
+        })
         if (isOldRefreshToken) {
             const newRefreshToken = await prisma.$transaction(async (tx) => {
 
@@ -129,7 +131,7 @@ export class UserService {
                 });
 
                 // Créer un nouveau Refresh Token
-                const token = await createRefreshToken(user.id);
+                const token = await createRefreshToken(user.id, userAgent , ip);
                 return token;
             });
             return {
@@ -138,18 +140,20 @@ export class UserService {
                 newRefreshToken
             };
         } else {
-            const refreshToken = await createRefreshToken(user.id);
+            const refreshToken = await createRefreshToken(user.id, userAgent , ip);
             return {
                 user: new UserDto(user),
                 accessToken,
-                refreshToken
+                refreshToken,
             };
         }
     }
 
 
     //connexion 2fa
-    static async verifyLogin2FA(userId, token) {
+    static async verifyLogin2FA(userId, token, req) {
+        const ip = req?.ip || req?.connection?.remoteAddress || null;
+        const userAgent = req?.headers["user-agent"] || "unknown";
         const user = await prisma.user.findUnique({ where: { id: userId } });
 
         if (!user || !user.twoFactorSecret) {
@@ -168,7 +172,7 @@ export class UserService {
             email: user.email
         });
 
-        const refreshToken = await createRefreshToken(user.id);
+        const refreshToken = await createRefreshToken(user.id, userAgent , ip);
 
         return {
             user: new UserDto(user),
@@ -200,13 +204,15 @@ export class UserService {
     }
 
     // 4. Connexion via GitHub
-    static async loginGithubUser(user) {
+    static async loginGithubUser(user,req) {
+        const ip = req?.ip || req?.connection?.remoteAddress || null;
+        const userAgent = req?.headers["user-agent"] || "unknown";
         const accessToken = await generateAccessToken({
             id: user.id,
             email: user.email
         });
 
-        const refreshToken = await createRefreshToken(user.id);
+        const refreshToken = await createRefreshToken(user.id, userAgent , ip);
 
         return {
             user: new UserDto(user),
@@ -246,8 +252,28 @@ export class UserService {
     }
 
     // 5. Utilitaires de recherche
-    static async findAll() {
-        return prisma.user.findMany();
+    static async activeSessions(req) {
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.split(' ')[1];
+        const payload = await verifyAccessToken(token);
+        const userTokens = await prisma.refreshToken.findMany({
+            where: {
+                userId: payload.id,   
+                revokedAt: null,      
+                expiresAt: {
+                    gt: new Date()    
+                }
+            }
+        });
+        const sessions = userTokens.map((token) => {
+            return {
+                userId: token.userId,
+                userAgent: token.userAgent,
+                ipAddress: token.ipAddress,
+                createdAt: token.createdAt
+            }
+        })
+        return sessions;
     }
 
     static async findById(id) {
@@ -273,6 +299,10 @@ export class UserService {
             email: storedToken.user.email
         });
 
+        const oldRefreshToken = await prisma.refreshToken.findFirst( {
+            token: token
+        } );
+
         //on utilise une transaction pour invalider l'ancien et créer le nouveau Refresh Token
         const newRefreshToken = await prisma.$transaction(async (tx) => {
 
@@ -291,6 +321,8 @@ export class UserService {
                     token: tokenString,
                     userId: storedToken.user.id,
                     expiresAt,
+                    ipAddress: oldRefreshToken.ipAddress,
+                    userAgent: oldRefreshToken.userAgent
                 },
             });
         });

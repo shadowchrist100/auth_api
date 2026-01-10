@@ -38,7 +38,7 @@ export class UserController {
     const validatedData = validateData(loginSchema, req.body);
     const { email, password } = validatedData;
 
-    const result = await UserService.login(email, password,req);
+    const result = await UserService.login(email, password, req);
 
     if (result.twoFactorRequired) {
       return res.json({
@@ -52,21 +52,21 @@ export class UserController {
     }
 
     //Creation de session pour au login 
-  req.session.user = {
-    id: result.user.id,
-    email: result.user.email,
-    username: result.user.username,
-  };
+    req.session.user = {
+      id: result.user.id,
+      email: result.user.email,
+      username: result.user.username,
+    };
 
-  // Enregistrement de l'historique de connexion
-await prisma.loginHistory.create({
-  data: {
-    userId: result.user.id,
-    ipAddress: req.ip,
-    userAgent: req.headers["user-agent"] ?? "unknown",
-    success: true
-  },
-});
+    // Enregistrement de l'historique de connexion
+    await prisma.loginHistory.create({
+      data: {
+        userId: result.user.id,
+        ipAddress: req.ip,
+        userAgent: req.headers["user-agent"] ?? "unknown",
+        success: true
+      },
+    });
 
 
     res.json({
@@ -84,10 +84,10 @@ await prisma.loginHistory.create({
     const { userId, token } = req.body;
 
     if (!userId || !token) {
-        return res.status(400).json({ message: "ID utilisateur et code requis" });
+      return res.status(400).json({ message: "ID utilisateur et code requis" });
     }
 
-    const result = await UserService.verifyLogin2FA(userId, token);
+    const result = await UserService.verifyLogin2FA(userId, token, req);
 
     res.json({
       success: true,
@@ -98,7 +98,7 @@ await prisma.loginHistory.create({
         refreshToken: result.refreshToken
       }
     });
-}
+  }
 
   static async refresh(req, res) {
     const { refreshToken } = req.body;
@@ -187,7 +187,7 @@ await prisma.loginHistory.create({
     let user = await UserService.findByEmail(userData.email);
 
     if (user) {
-      const result = await UserService.loginGithubUser(user);
+      const result = await UserService.loginGithubUser(user, req);
       return res.json({
         success: true,
         message: "Connexion réussie",
@@ -209,8 +209,14 @@ await prisma.loginHistory.create({
 
   }
 
-  
-  
+  static async getSessions(req, res) {
+    const sessions = await UserService.activeSessions(req);
+    return res.status(200).json({
+      success: true,
+      sessions: sessions
+    });
+  }
+
   static async getAll(req, res) {
     const users = await UserService.findAll();
     res.json({
@@ -260,7 +266,7 @@ await prisma.loginHistory.create({
     res.json({ success: true, message: "Mot de passe mis à jour" });
   }
 
-    
+
   //Controller pour vérifier si la session existe
   static async checkSession(req, res) {
     res.json({
@@ -287,7 +293,7 @@ await prisma.loginHistory.create({
     });
   }
 
-  
-} 
+
+}
 
 

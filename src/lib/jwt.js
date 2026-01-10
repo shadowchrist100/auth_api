@@ -20,7 +20,7 @@ function generatePadding(){
 }
 
 // Crée un Refresh Token en base de données (valide 7 jours)
-export async function createRefreshToken(userId) {
+export async function createRefreshToken(userId, userAgent, ip) {
   const token = crypto.randomBytes(512).toString("hex");
   
   const expiresAt = new Date();
@@ -31,6 +31,8 @@ export async function createRefreshToken(userId) {
       token,
       userId,
       expiresAt,
+      userAgent,
+      ipAddress:ip
     },
   });
 

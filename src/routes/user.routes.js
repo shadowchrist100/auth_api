@@ -26,6 +26,7 @@ router.get(
   asyncHandler(UserController.getLoginHistory)
 );
 
+router.get("/sessions", auth, asyncHandler(UserController.getSessions));
 
 export default router;
 
