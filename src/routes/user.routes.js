@@ -11,7 +11,7 @@ const router = Router();
 router.post("/change-password", auth, asyncHandler(UserController.changePassword));
 router.post("/logout",auth, asyncHandler(UserController.logout));
 // vérifier son email
-router.get("/verify_email", auth, asyncHandler(UserController.verifyEmail));d
+router.get("/verify_email", auth, asyncHandler(UserController.verifyEmail));
 
 // SESSION : vérifier si elle existe
 router.get(
